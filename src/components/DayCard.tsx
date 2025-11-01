@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import IngredientItem from "./IngredientItem";
 
 interface Ingredient {
@@ -36,6 +37,7 @@ const DayCard = ({
   const [suggestedIngredients, setSuggestedIngredients] = useState<string[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const completedCount = ingredients.filter((i) => i.checked).length;
   const totalCount = ingredients.length;
@@ -84,8 +86,8 @@ const DayCard = ({
     } catch (error) {
       console.error("Error fetching suggestions:", error);
       toast({
-        title: "Couldn't get suggestions",
-        description: error instanceof Error ? error.message : "Please try again",
+        title: t.couldntGetSuggestions,
+        description: error instanceof Error ? error.message : t.pleaseTryAgain,
         variant: "destructive",
       });
     } finally {
@@ -136,7 +138,7 @@ const DayCard = ({
         {isAddingMeal ? (
           <div className="flex gap-2">
             <Input
-              placeholder="Enter meal name..."
+              placeholder={t.enterMealName}
               value={meal}
               onChange={(e) => onMealChange(e.target.value)}
               onBlur={handleMealBlur}
@@ -156,7 +158,7 @@ const DayCard = ({
               </h3>
             ) : (
               <p className="text-muted-foreground group-hover:text-primary transition-colors">
-                + Add meal
+                + {t.addMeal}
               </p>
             )}
           </div>
@@ -166,7 +168,7 @@ const DayCard = ({
         {isLoadingSuggestions && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground animate-fade-in">
             <Sparkles className="h-4 w-4 animate-pulse" />
-            <span>Getting ingredient suggestions...</span>
+            <span>{t.gettingSuggestions}</span>
           </div>
         )}
 
@@ -175,7 +177,7 @@ const DayCard = ({
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-secondary" />
-                Suggested Ingredients
+                {t.suggestedIngredients}
               </p>
               <Button
                 variant="ghost"
@@ -183,7 +185,7 @@ const DayCard = ({
                 onClick={handleDismissSuggestions}
                 className="h-auto py-1 px-2 text-xs"
               >
-                Dismiss
+                {t.dismiss}
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -220,7 +222,7 @@ const DayCard = ({
         {/* Add Ingredient */}
         <div className="flex gap-2">
           <Input
-            placeholder="Add ingredient..."
+            placeholder={t.addIngredient}
             value={newIngredient}
             onChange={(e) => setNewIngredient(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleAddIngredient()}

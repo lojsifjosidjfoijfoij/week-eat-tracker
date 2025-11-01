@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { RotateCcw, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import DayCard from "./DayCard";
 import ShoppingList from "./ShoppingList";
 
@@ -20,10 +21,19 @@ type WeekData = {
   [key: string]: DayData;
 };
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
 const WeeklyPlanner = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
+  
+  const DAYS = [
+    t.monday,
+    t.tuesday,
+    t.wednesday,
+    t.thursday,
+    t.friday,
+    t.saturday,
+    t.sunday,
+  ];
   const [weekData, setWeekData] = useState<WeekData>(() => {
     const saved = localStorage.getItem("mealWeekPlanner");
     if (saved) {
@@ -93,8 +103,8 @@ const WeeklyPlanner = () => {
       }, {} as WeekData)
     );
     toast({
-      title: "Week reset",
-      description: "Your meal plan has been cleared.",
+      title: t.resetWeek,
+      description: t.confirmReset,
     });
   };
 
@@ -114,10 +124,10 @@ const WeeklyPlanner = () => {
         {/* Header */}
         <div className="mb-8 text-center animate-fade-in">
           <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            MealWeek Planner
+            {t.appTitle}
           </h1>
           <p className="text-muted-foreground text-lg">
-            Plan your meals and track your ingredients for the week
+            {t.appSubtitle}
           </p>
         </div>
 
@@ -128,7 +138,7 @@ const WeeklyPlanner = () => {
             className="bg-primary hover:bg-primary-hover text-primary-foreground shadow-md"
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
-            Shopping List
+            {t.shoppingList}
           </Button>
           <Button
             onClick={handleResetWeek}
@@ -136,7 +146,7 @@ const WeeklyPlanner = () => {
             className="border-destructive/50 text-destructive hover:bg-destructive/10"
           >
             <RotateCcw className="h-4 w-4 mr-2" />
-            Reset Week
+            {t.resetWeek}
           </Button>
         </div>
 

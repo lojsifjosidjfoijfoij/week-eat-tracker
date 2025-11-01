@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ShoppingListProps {
   ingredients: { name: string; checked: boolean; day: string }[];
@@ -9,6 +10,8 @@ interface ShoppingListProps {
 }
 
 const ShoppingList = ({ ingredients, onClose }: ShoppingListProps) => {
+  const { t } = useLanguage();
+  
   // Group ingredients by name and aggregate days
   const groupedIngredients = ingredients.reduce((acc, ing) => {
     const existing = acc.find((item) => item.name.toLowerCase() === ing.name.toLowerCase());
@@ -33,7 +36,7 @@ const ShoppingList = ({ ingredients, onClose }: ShoppingListProps) => {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
       <Card className="w-full max-w-2xl max-h-[80vh] overflow-hidden animate-scale-in">
         <CardHeader className="flex flex-row items-center justify-between border-b">
-          <CardTitle className="text-2xl">Shopping List</CardTitle>
+          <CardTitle className="text-2xl">{t.shoppingList}</CardTitle>
           <Button onClick={onClose} size="icon" variant="ghost">
             <X className="h-5 w-5" />
           </Button>
