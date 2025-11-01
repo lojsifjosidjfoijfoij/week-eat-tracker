@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Plus, Trash2, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import IngredientItem from "./IngredientItem";
 
 interface Ingredient {
@@ -32,6 +33,9 @@ const DayCard = ({
 }: DayCardProps) => {
   const [newIngredient, setNewIngredient] = useState("");
   const [isAddingMeal, setIsAddingMeal] = useState(!meal);
+  const [suggestedIngredients, setSuggestedIngredients] = useState<string[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const { toast } = useToast();
 
   const completedCount = ingredients.filter((i) => i.checked).length;
   const totalCount = ingredients.length;
@@ -43,6 +47,59 @@ const DayCard = ({
       onAddIngredient(newIngredient.trim());
       setNewIngredient("");
     }
+  };
+
+  const handleMealBlur = async () => {
+    if (meal && meal !== "") {
+      setIsAddingMeal(false);
+      // Only fetch suggestions if there are no ingredients yet
+      if (ingredients.length === 0) {
+        await fetchSuggestions(meal);
+      }
+    }
+  };
+
+  const fetchSuggestions = async (mealName: string) => {
+    setIsLoadingSuggestions(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/suggest-ingredients`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ mealName }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to get suggestions");
+      }
+
+      const data = await response.json();
+      setSuggestedIngredients(data.ingredients || []);
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+      toast({
+        title: "Couldn't get suggestions",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  const handleAddSuggestedIngredient = (ingredient: string) => {
+    onAddIngredient(ingredient);
+    setSuggestedIngredients((prev) => prev.filter((i) => i !== ingredient));
+  };
+
+  const handleDismissSuggestions = () => {
+    setSuggestedIngredients([]);
   };
 
   return (
@@ -82,7 +139,8 @@ const DayCard = ({
               placeholder="Enter meal name..."
               value={meal}
               onChange={(e) => onMealChange(e.target.value)}
-              onBlur={() => meal && setIsAddingMeal(false)}
+              onBlur={handleMealBlur}
+              onKeyPress={(e) => e.key === "Enter" && handleMealBlur()}
               autoFocus
               className="border-primary/50 focus:border-primary"
             />
@@ -101,6 +159,47 @@ const DayCard = ({
                 + Add meal
               </p>
             )}
+          </div>
+        )}
+
+        {/* AI Suggestions */}
+        {isLoadingSuggestions && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground animate-fade-in">
+            <Sparkles className="h-4 w-4 animate-pulse" />
+            <span>Getting ingredient suggestions...</span>
+          </div>
+        )}
+
+        {suggestedIngredients.length > 0 && (
+          <div className="space-y-2 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-secondary" />
+                Suggested Ingredients
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDismissSuggestions}
+                className="h-auto py-1 px-2 text-xs"
+              >
+                Dismiss
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {suggestedIngredients.map((ingredient, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAddSuggestedIngredient(ingredient)}
+                  className="text-xs hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  {ingredient}
+                </Button>
+              ))}
+            </div>
           </div>
         )}
 
