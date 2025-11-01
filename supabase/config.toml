@@ -1,1 +1,4 @@
 project_id = "qjubarjjubosogweueia"
+
+[functions.suggest-ingredients]
+verify_jwt = false
