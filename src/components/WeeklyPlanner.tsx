@@ -18,7 +18,7 @@ interface DayData {
 }
 
 type WeekData = {
-  [key: string]: DayData;
+  [key: number]: DayData;
 };
 
 const WeeklyPlanner = () => {
@@ -39,8 +39,8 @@ const WeeklyPlanner = () => {
     if (saved) {
       return JSON.parse(saved);
     }
-    return DAYS.reduce((acc, day) => {
-      acc[day] = { meal: "", ingredients: [] };
+    return DAYS.reduce((acc, _, index) => {
+      acc[index] = { meal: "", ingredients: [] };
       return acc;
     }, {} as WeekData);
   });
@@ -51,54 +51,54 @@ const WeeklyPlanner = () => {
     localStorage.setItem("mealWeekPlanner", JSON.stringify(weekData));
   }, [weekData]);
 
-  const handleMealChange = (day: string, meal: string) => {
+  const handleMealChange = (dayIndex: number, meal: string) => {
     setWeekData((prev) => ({
       ...prev,
-      [day]: { ...prev[day], meal },
+      [dayIndex]: { ...prev[dayIndex], meal },
     }));
   };
 
-  const handleAddIngredient = (day: string, name: string) => {
+  const handleAddIngredient = (dayIndex: number, name: string) => {
     const newIngredient: Ingredient = {
-      id: `${day}-${Date.now()}`,
+      id: `${dayIndex}-${Date.now()}`,
       name,
       checked: false,
     };
     setWeekData((prev) => ({
       ...prev,
-      [day]: {
-        ...prev[day],
-        ingredients: [...prev[day].ingredients, newIngredient],
+      [dayIndex]: {
+        ...prev[dayIndex],
+        ingredients: [...prev[dayIndex].ingredients, newIngredient],
       },
     }));
   };
 
-  const handleToggleIngredient = (day: string, id: string) => {
+  const handleToggleIngredient = (dayIndex: number, id: string) => {
     setWeekData((prev) => ({
       ...prev,
-      [day]: {
-        ...prev[day],
-        ingredients: prev[day].ingredients.map((ing) =>
+      [dayIndex]: {
+        ...prev[dayIndex],
+        ingredients: prev[dayIndex].ingredients.map((ing) =>
           ing.id === id ? { ...ing, checked: !ing.checked } : ing
         ),
       },
     }));
   };
 
-  const handleDeleteIngredient = (day: string, id: string) => {
+  const handleDeleteIngredient = (dayIndex: number, id: string) => {
     setWeekData((prev) => ({
       ...prev,
-      [day]: {
-        ...prev[day],
-        ingredients: prev[day].ingredients.filter((ing) => ing.id !== id),
+      [dayIndex]: {
+        ...prev[dayIndex],
+        ingredients: prev[dayIndex].ingredients.filter((ing) => ing.id !== id),
       },
     }));
   };
 
   const handleResetWeek = () => {
     setWeekData(
-      DAYS.reduce((acc, day) => {
-        acc[day] = { meal: "", ingredients: [] };
+      DAYS.reduce((acc, _, index) => {
+        acc[index] = { meal: "", ingredients: [] };
         return acc;
       }, {} as WeekData)
     );
@@ -110,8 +110,8 @@ const WeeklyPlanner = () => {
 
   const getAllIngredients = () => {
     const allIngredients: { name: string; checked: boolean; day: string }[] = [];
-    DAYS.forEach((day) => {
-      weekData[day].ingredients.forEach((ing) => {
+    DAYS.forEach((day, index) => {
+      weekData[index].ingredients.forEach((ing) => {
         allIngredients.push({ ...ing, day });
       });
     });
@@ -162,18 +162,18 @@ const WeeklyPlanner = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {DAYS.map((day, index) => (
             <div
-              key={day}
+              key={index}
               className="animate-fade-in"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
               <DayCard
                 day={day}
-                meal={weekData[day].meal}
-                ingredients={weekData[day].ingredients}
-                onMealChange={(meal) => handleMealChange(day, meal)}
-                onAddIngredient={(name) => handleAddIngredient(day, name)}
-                onToggleIngredient={(id) => handleToggleIngredient(day, id)}
-                onDeleteIngredient={(id) => handleDeleteIngredient(day, id)}
+                meal={weekData[index].meal}
+                ingredients={weekData[index].ingredients}
+                onMealChange={(meal) => handleMealChange(index, meal)}
+                onAddIngredient={(name) => handleAddIngredient(index, name)}
+                onToggleIngredient={(id) => handleToggleIngredient(index, id)}
+                onDeleteIngredient={(id) => handleDeleteIngredient(index, id)}
               />
             </div>
           ))}
