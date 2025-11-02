@@ -37,7 +37,24 @@ const WeeklyPlanner = () => {
   const [weekData, setWeekData] = useState<WeekData>(() => {
     const saved = localStorage.getItem("mealWeekPlanner");
     if (saved) {
-      return JSON.parse(saved);
+      try {
+        const parsed = JSON.parse(saved);
+        // Check if data is in old format (string keys) vs new format (numeric keys)
+        const firstKey = Object.keys(parsed)[0];
+        if (firstKey && isNaN(Number(firstKey))) {
+          // Old format detected - clear it and start fresh
+          localStorage.removeItem("mealWeekPlanner");
+          return DAYS.reduce((acc, _, index) => {
+            acc[index] = { meal: "", ingredients: [] };
+            return acc;
+          }, {} as WeekData);
+        }
+        // New format - use it
+        return parsed;
+      } catch (e) {
+        // Invalid data - reset
+        localStorage.removeItem("mealWeekPlanner");
+      }
     }
     return DAYS.reduce((acc, _, index) => {
       acc[index] = { meal: "", ingredients: [] };
