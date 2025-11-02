@@ -4,7 +4,7 @@ import { Language, translations } from '@/lib/translations';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: typeof translations.en;
+  t: typeof translations.en & { languageCode: Language };
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -22,7 +22,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, lang);
   };
 
-  const t = translations[language];
+  const t = { ...translations[language], languageCode: language };
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>

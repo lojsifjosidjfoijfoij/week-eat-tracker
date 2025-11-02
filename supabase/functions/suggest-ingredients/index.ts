@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { mealName } = await req.json();
+    const { mealName, language = "en" } = await req.json();
     
     if (!mealName || mealName.trim() === "") {
       return new Response(
@@ -36,7 +36,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are a helpful cooking assistant. When given a meal name, suggest a list of common ingredients needed for that dish. Return ONLY a JSON array of ingredient names as strings, nothing else. Example format: [\"Spaghetti\", \"Ground beef\", \"Tomatoes\", \"Garlic\", \"Onion\", \"Olive oil\", \"Basil\"]. Keep the list between 5-8 items."
+            content: `You are a helpful cooking assistant. When given a meal name, suggest a list of common ingredients needed for that dish. Return ONLY a JSON array of ingredient names as strings, nothing else. Example format: ["Spaghetti", "Ground beef", "Tomatoes", "Garlic", "Onion", "Olive oil", "Basil"]. Keep the list between 5-8 items. IMPORTANT: Respond in ${language === "en" ? "English" : language === "da" ? "Danish" : language === "de" ? "German" : language === "fr" ? "French" : language === "es" ? "Spanish" : "English"}. All ingredient names must be in that language.`
           },
           {
             role: "user",

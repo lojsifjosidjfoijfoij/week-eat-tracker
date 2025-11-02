@@ -72,7 +72,7 @@ const DayCard = ({
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ mealName }),
+          body: JSON.stringify({ mealName, language: t.languageCode }),
         }
       );
 
