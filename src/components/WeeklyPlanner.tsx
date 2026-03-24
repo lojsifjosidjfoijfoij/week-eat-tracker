@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
-import { RotateCcw, ShoppingCart } from "lucide-react";
+import { RotateCcw, ShoppingCart, Users, LogOut, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useFamily } from "@/contexts/FamilyContext";
+import { supabase } from "@/lib/supabase";
 import DayCard from "./DayCard";
 import ShoppingList from "./ShoppingList";
 
@@ -21,168 +24,213 @@ type WeekData = {
   [key: number]: DayData;
 };
 
+const EMPTY_WEEK = (days: string[]): WeekData =>
+  days.reduce((acc, _, index) => {
+    acc[index] = { meal: "", ingredients: [] };
+    return acc;
+  }, {} as WeekData);
+
 const WeeklyPlanner = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
-  
-  const DAYS = [
-    t.monday,
-    t.tuesday,
-    t.wednesday,
-    t.thursday,
-    t.friday,
-    t.saturday,
-    t.sunday,
-  ];
-  const [weekData, setWeekData] = useState<WeekData>(() => {
-    const saved = localStorage.getItem("mealWeekPlanner");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Check if data is in old format (string keys) vs new format (numeric keys)
-        const firstKey = Object.keys(parsed)[0];
-        if (firstKey && isNaN(Number(firstKey))) {
-          // Old format detected - clear it and start fresh
-          localStorage.removeItem("mealWeekPlanner");
-          return DAYS.reduce((acc, _, index) => {
-            acc[index] = { meal: "", ingredients: [] };
-            return acc;
-          }, {} as WeekData);
-        }
-        // New format - use it
-        return parsed;
-      } catch (e) {
-        // Invalid data - reset
-        localStorage.removeItem("mealWeekPlanner");
-      }
-    }
-    return DAYS.reduce((acc, _, index) => {
-      acc[index] = { meal: "", ingredients: [] };
-      return acc;
-    }, {} as WeekData);
-  });
+  const { familyId, familyCode, familyName, createFamily, joinFamily, leaveFamily } = useFamily();
 
+  const DAYS = [t.monday, t.tuesday, t.wednesday, t.thursday, t.friday, t.saturday, t.sunday];
+
+  const [weekData, setWeekData] = useState<WeekData>(EMPTY_WEEK(DAYS));
   const [showShoppingList, setShowShoppingList] = useState(false);
+  const [showFamilyPanel, setShowFamilyPanel] = useState(false);
+  const [familyNameInput, setFamilyNameInput] = useState("");
+  const [joinCodeInput, setJoinCodeInput] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("mealWeekPlanner", JSON.stringify(weekData));
-  }, [weekData]);
+    if (familyId) {
+      loadFromSupabase();
+    } else {
+      const saved = localStorage.getItem("mealWeekPlanner");
+      if (saved) {
+        try { setWeekData(JSON.parse(saved)); } catch {}
+      }
+    }
+  }, [familyId]);
 
-  const handleMealChange = (dayIndex: number, meal: string) => {
-    setWeekData((prev) => ({
-      ...prev,
-      [dayIndex]: { ...prev[dayIndex], meal },
-    }));
-  };
+  useEffect(() => {
+    if (!familyId) {
+      localStorage.setItem("mealWeekPlanner", JSON.stringify(weekData));
+    }
+  }, [weekData, familyId]);
 
-  const handleAddIngredient = (dayIndex: number, name: string) => {
-    const newIngredient: Ingredient = {
-      id: `${dayIndex}-${Date.now()}`,
-      name,
-      checked: false,
-    };
-    setWeekData((prev) => ({
-      ...prev,
-      [dayIndex]: {
-        ...prev[dayIndex],
-        ingredients: [...prev[dayIndex].ingredients, newIngredient],
-      },
-    }));
-  };
-
-  const handleToggleIngredient = (dayIndex: number, id: string) => {
-    setWeekData((prev) => ({
-      ...prev,
-      [dayIndex]: {
-        ...prev[dayIndex],
-        ingredients: prev[dayIndex].ingredients.map((ing) =>
-          ing.id === id ? { ...ing, checked: !ing.checked } : ing
-        ),
-      },
-    }));
-  };
-
-  const handleDeleteIngredient = (dayIndex: number, id: string) => {
-    setWeekData((prev) => ({
-      ...prev,
-      [dayIndex]: {
-        ...prev[dayIndex],
-        ingredients: prev[dayIndex].ingredients.filter((ing) => ing.id !== id),
-      },
-    }));
-  };
-
-  const handleResetWeek = () => {
-    setWeekData(
-      DAYS.reduce((acc, _, index) => {
-        acc[index] = { meal: "", ingredients: [] };
-        return acc;
-      }, {} as WeekData)
-    );
-    toast({
-      title: t.resetWeek,
-      description: t.confirmReset,
+  const loadFromSupabase = async () => {
+    if (!familyId) return;
+    setLoading(true);
+    const [mealsRes, ingredientsRes] = await Promise.all([
+      supabase.from("meal_plans").select("*").eq("family_id", familyId),
+      supabase.from("ingredients").select("*").eq("family_id", familyId),
+    ]);
+    const newData = EMPTY_WEEK(DAYS);
+    mealsRes.data?.forEach((m) => {
+      if (newData[m.day_index] !== undefined) newData[m.day_index].meal = m.meal || "";
     });
+    ingredientsRes.data?.forEach((ing) => {
+      if (newData[ing.day_index] !== undefined) {
+        newData[ing.day_index].ingredients.push({ id: ing.id, name: ing.name, checked: ing.checked });
+      }
+    });
+    setWeekData(newData);
+    setLoading(false);
+  };
+
+  const handleMealChange = async (dayIndex: number, meal: string) => {
+    setWeekData((prev) => ({ ...prev, [dayIndex]: { ...prev[dayIndex], meal } }));
+    if (familyId) {
+      const existing = await supabase.from("meal_plans").select("id").eq("family_id", familyId).eq("day_index", dayIndex).single();
+      if (existing.data) {
+        await supabase.from("meal_plans").update({ meal }).eq("id", existing.data.id);
+      } else {
+        await supabase.from("meal_plans").insert({ family_id: familyId, day_index: dayIndex, meal });
+      }
+    }
+  };
+
+  const handleAddIngredient = async (dayIndex: number, name: string) => {
+    const id = `${dayIndex}-${Date.now()}`;
+    const newIngredient: Ingredient = { id, name, checked: false };
+    setWeekData((prev) => ({ ...prev, [dayIndex]: { ...prev[dayIndex], ingredients: [...prev[dayIndex].ingredients, newIngredient] } }));
+    if (familyId) {
+      await supabase.from("ingredients").insert({ id, family_id: familyId, day_index: dayIndex, name, checked: false });
+    }
+  };
+
+  const handleToggleIngredient = async (dayIndex: number, id: string) => {
+    const ingredient = weekData[dayIndex].ingredients.find((i) => i.id === id);
+    if (!ingredient) return;
+    setWeekData((prev) => ({ ...prev, [dayIndex]: { ...prev[dayIndex], ingredients: prev[dayIndex].ingredients.map((ing) => ing.id === id ? { ...ing, checked: !ing.checked } : ing) } }));
+    if (familyId) {
+      await supabase.from("ingredients").update({ checked: !ingredient.checked }).eq("id", id);
+    }
+  };
+
+  const handleDeleteIngredient = async (dayIndex: number, id: string) => {
+    setWeekData((prev) => ({ ...prev, [dayIndex]: { ...prev[dayIndex], ingredients: prev[dayIndex].ingredients.filter((ing) => ing.id !== id) } }));
+    if (familyId) {
+      await supabase.from("ingredients").delete().eq("id", id);
+    }
+  };
+
+  const handleResetWeek = async () => {
+    setWeekData(EMPTY_WEEK(DAYS));
+    if (familyId) {
+      await supabase.from("meal_plans").delete().eq("family_id", familyId);
+      await supabase.from("ingredients").delete().eq("family_id", familyId);
+    } else {
+      localStorage.removeItem("mealWeekPlanner");
+    }
+    toast({ title: t.resetWeek, description: t.confirmReset });
   };
 
   const getAllIngredients = () => {
-    const allIngredients: { name: string; checked: boolean; day: string }[] = [];
+    const all: { name: string; checked: boolean; day: string }[] = [];
     DAYS.forEach((day, index) => {
-      weekData[index].ingredients.forEach((ing) => {
-        allIngredients.push({ ...ing, day });
-      });
+      weekData[index].ingredients.forEach((ing) => { all.push({ ...ing, day }); });
     });
-    return allIngredients;
+    return all;
+  };
+
+  const handleCreateFamily = async () => {
+    if (!familyNameInput.trim()) return;
+    const code = await createFamily(familyNameInput.trim());
+    setFamilyNameInput("");
+    toast({ title: "Family created!", description: `Your code is ${code}` });
+  };
+
+  const handleJoinFamily = async () => {
+    if (!joinCodeInput.trim()) return;
+    const success = await joinFamily(joinCodeInput.trim());
+    if (success) {
+      setJoinCodeInput("");
+      setShowFamilyPanel(false);
+      loadFromSupabase();
+      toast({ title: "Joined family!" });
+    } else {
+      toast({ title: "Code not found", description: "Check the code and try again.", variant: "destructive" });
+    }
+  };
+
+  const copyCode = () => {
+    if (familyCode) {
+      navigator.clipboard.writeText(familyCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8 text-center animate-fade-in">
-          <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            {t.appTitle}
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            {t.appSubtitle}
-          </p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-3 justify-center mb-8 animate-fade-in">
-          <Button
-            onClick={() => setShowShoppingList(!showShoppingList)}
-            className="bg-primary hover:bg-primary-hover text-primary-foreground shadow-md"
-          >
+        <div className="flex flex-wrap gap-3 justify-center mb-8">
+          <Button onClick={() => setShowShoppingList(!showShoppingList)} className="bg-primary hover:bg-primary-hover text-primary-foreground shadow-md">
             <ShoppingCart className="h-4 w-4 mr-2" />
             {t.shoppingList}
           </Button>
-          <Button
-            onClick={handleResetWeek}
-            variant="outline"
-            className="border-destructive/50 text-destructive hover:bg-destructive/10"
-          >
+          <Button onClick={() => setShowFamilyPanel(!showFamilyPanel)} variant="outline">
+            <Users className="h-4 w-4 mr-2" />
+            {familyName ? familyName : "Family"}
+          </Button>
+          <Button onClick={handleResetWeek} variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10">
             <RotateCcw className="h-4 w-4 mr-2" />
             {t.resetWeek}
           </Button>
         </div>
 
-        {/* Shopping List Modal */}
-        {showShoppingList && (
-          <ShoppingList
-            ingredients={getAllIngredients()}
-            onClose={() => setShowShoppingList(false)}
-          />
+        {showFamilyPanel && (
+          <div className="mb-8 p-6 rounded-xl border bg-card shadow-sm max-w-md mx-auto">
+            {familyId ? (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold">Family: {familyName}</h2>
+                <p className="text-sm text-muted-foreground">Share this code with your family:</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 text-2xl font-bold tracking-widest text-center py-3 bg-muted rounded-lg">{familyCode}</div>
+                  <Button size="icon" variant="outline" onClick={copyCode}>
+                    {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <Button variant="outline" className="w-full text-destructive border-destructive/50" onClick={leaveFamily}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Leave family
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <h2 className="text-lg font-semibold">Create a family</h2>
+                  <div className="flex gap-2">
+                    <Input placeholder="Family name..." value={familyNameInput} onChange={(e) => setFamilyNameInput(e.target.value)} />
+                    <Button onClick={handleCreateFamily}>Create</Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-lg font-semibold">Join a family</h2>
+                  <div className="flex gap-2">
+                    <Input placeholder="Enter code..." value={joinCodeInput} onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())} maxLength={6} />
+                    <Button onClick={handleJoinFamily}>Join</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
-        {/* Days Grid */}
+        {showShoppingList && (
+          <ShoppingList ingredients={getAllIngredients()} onClose={() => setShowShoppingList(false)} />
+        )}
+
+        {loading && <div className="text-center py-4 text-muted-foreground">Syncing with family...</div>}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {DAYS.map((day, index) => (
-            <div
-              key={index}
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
+            <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
               <DayCard
                 day={day}
                 meal={weekData[index].meal}
