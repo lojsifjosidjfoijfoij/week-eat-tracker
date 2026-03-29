@@ -5,14 +5,29 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { FamilyProvider } from "@/contexts/FamilyContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const AppRoutes = () => {
   const { user, loading } = useAuth();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const seen = localStorage.getItem("onboarding_done");
+      if (!seen) setShowOnboarding(true);
+    }
+  }, [user]);
+
+  const handleOnboardingDone = () => {
+    localStorage.setItem("onboarding_done", "true");
+    setShowOnboarding(false);
+  };
 
   if (loading) {
     return (
@@ -25,9 +40,9 @@ const AppRoutes = () => {
     );
   }
 
-  if (!user) {
-    return <Login />;
-  }
+  if (!user) return <Login />;
+
+  if (showOnboarding) return <Onboarding onDone={handleOnboardingDone} />;
 
   return (
     <FamilyProvider>

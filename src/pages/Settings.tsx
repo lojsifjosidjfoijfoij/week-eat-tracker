@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFamily } from "@/contexts/FamilyContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { scheduleMondayReminder, cancelMondayReminder } from "@/lib/notifications";
 
 const Settings = ({ onClose }: { onClose: () => void }) => {
   const { user, signOut } = useAuth();
@@ -17,6 +18,9 @@ const Settings = ({ onClose }: { onClose: () => void }) => {
   const [joinCodeInput, setJoinCodeInput] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [notificationsOn, setNotificationsOn] = useState(
+  localStorage.getItem("monday_reminder") === "true"
+);
 
   const handleCreateFamily = async () => {
     if (!familyNameInput.trim()) return;
@@ -59,6 +63,23 @@ const Settings = ({ onClose }: { onClose: () => void }) => {
     }
     setLoading(false);
   };
+  const handleToggleNotification = async () => {
+  if (notificationsOn) {
+    await cancelMondayReminder();
+    localStorage.removeItem("monday_reminder");
+    setNotificationsOn(false);
+    toast({ title: "Reminder turned off" });
+  } else {
+    const success = await scheduleMondayReminder();
+    if (success) {
+      localStorage.setItem("monday_reminder", "true");
+      setNotificationsOn(true);
+      toast({ title: "Reminder set! ✅", description: "You'll get a nudge every Monday at 9am." });
+    } else {
+      toast({ title: "Permission denied", description: "Enable notifications in your iPhone settings.", variant: "destructive" });
+    }
+  }
+};
 
   const handleSignOut = async () => {
     await signOut();
@@ -182,7 +203,26 @@ const Settings = ({ onClose }: { onClose: () => void }) => {
                 <p className="font-medium text-sm">Free plan</p>
                 <p className="text-xs text-muted-foreground">Upgrade to unlock AI suggestions and family sharing</p>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </Card>
+        </div>
+
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Notifications</p>
+          <Card>
+            <div className="flex items-center justify-between p-4">
+              <div>
+                <p className="font-medium text-sm">Monday reminder</p>
+                <p className="text-xs text-muted-foreground">Get reminded every Monday at 9am</p>
+              </div>
+              <Button
+                variant={notificationsOn ? "default" : "outline"}
+                size="sm"
+                onClick={handleToggleNotification}
+              >
+                {notificationsOn ? "On" : "Off"}
+              </Button>
             </div>
           </Card>
         </div>
