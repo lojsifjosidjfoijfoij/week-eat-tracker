@@ -126,7 +126,7 @@ const DayCard = ({
         {totalCount > 0 && (
           <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-secondary transition-all duration-500 ease-out"
+              className="h-full bg-foreground transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>

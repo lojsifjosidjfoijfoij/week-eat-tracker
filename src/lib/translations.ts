@@ -12,7 +12,7 @@ export const translations = {
     sunday: 'Sunday',
     
     // App
-    appTitle: 'MealWeek Planner',
+    appTitle: 'Weekplate',
     appSubtitle: 'Plan your weekly meals and track ingredients',
     
     // Meal Card
@@ -50,7 +50,7 @@ export const translations = {
     sunday: 'Søndag',
     
     // App
-    appTitle: 'MealWeek Planner',
+    appTitle: 'Weekplate',
     appSubtitle: 'Planlæg dine ugentlige måltider og spor ingredienser',
     
     // Meal Card
@@ -88,7 +88,7 @@ export const translations = {
     sunday: 'Sonntag',
     
     // App
-    appTitle: 'MealWeek Planner',
+    appTitle: 'Weekplate',
     appSubtitle: 'Planen Sie Ihre wöchentlichen Mahlzeiten und verfolgen Sie Zutaten',
     
     // Meal Card
@@ -126,7 +126,7 @@ export const translations = {
     sunday: 'Dimanche',
     
     // App
-    appTitle: 'MealWeek Planner',
+    appTitle: 'Weekplate',
     appSubtitle: 'Planifiez vos repas hebdomadaires et suivez les ingrédients',
     
     // Meal Card
@@ -164,7 +164,7 @@ export const translations = {
     sunday: 'Domingo',
     
     // App
-    appTitle: 'MealWeek Planner',
+    appTitle: 'Weekplate',
     appSubtitle: 'Planifica tus comidas semanales y rastrea ingredientes',
     
     // Meal Card

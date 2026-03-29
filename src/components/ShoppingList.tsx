@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,45 +6,37 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ShoppingListProps {
-  ingredients: { name: string; checked: boolean; day: string }[];
+  ingredients: { id: string; name: string; checked: boolean; day: string; dayIndex: number }[];
   onClose: () => void;
+  onToggle: (dayIndex: number, id: string) => void;
 }
 
-const ShoppingList = ({ ingredients, onClose }: ShoppingListProps) => {
+const ShoppingList = ({ ingredients, onClose, onToggle }: ShoppingListProps) => {
   const { t } = useLanguage();
 
-  // Group ingredients by name and aggregate days
   const groupedIngredients = ingredients.reduce((acc, ing) => {
-    const existing = acc.find(
-      (item) => item.name.toLowerCase() === ing.name.toLowerCase()
-    );
+    const key = ing.name.toLowerCase();
+    const existing = acc.find((item) => item.name.toLowerCase() === key);
     if (existing) {
       existing.days.push(ing.day);
+      existing.items.push(ing);
     } else {
-      acc.push({
-        name: ing.name,
-        days: [ing.day],
-      });
+      acc.push({ name: ing.name, days: [ing.day], items: [ing] });
     }
     return acc;
-  }, [] as { name: string; days: string[] }[]);
+  }, [] as { name: string; days: string[]; items: typeof ingredients }[]);
 
-  // Local checked state for the shopping list
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const unchecked = groupedIngredients.filter((g) => g.items.some((i) => !i.checked));
+  const checked = groupedIngredients.filter((g) => g.items.every((i) => i.checked));
 
-  const toggleItem = (name: string) => {
-    setCheckedItems((prev) => ({
-      ...prev,
-      [name.toLowerCase()]: !prev[name.toLowerCase()],
-    }));
+  const handleToggle = (group: typeof groupedIngredients[0]) => {
+    const allChecked = group.items.every((i) => i.checked);
+    group.items.forEach((i) => {
+      if (allChecked || !i.checked) {
+        onToggle(i.dayIndex, i.id);
+      }
+    });
   };
-
-  const unchecked = groupedIngredients.filter(
-    (ing) => !checkedItems[ing.name.toLowerCase()]
-  );
-  const checked = groupedIngredients.filter(
-    (ing) => checkedItems[ing.name.toLowerCase()]
-  );
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
@@ -61,7 +52,6 @@ const ShoppingList = ({ ingredients, onClose }: ShoppingListProps) => {
             <X className="h-5 w-5" />
           </Button>
         </CardHeader>
-
         <CardContent className="overflow-y-auto max-h-[70vh] p-6">
           {groupedIngredients.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -70,42 +60,28 @@ const ShoppingList = ({ ingredients, onClose }: ShoppingListProps) => {
             </div>
           ) : (
             <div className="space-y-2">
-              {/* Unchecked items */}
-              {unchecked.map((ingredient, index) => (
+              {unchecked.map((group, index) => (
                 <div
-                  key={ingredient.name}
-                  className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors animate-slide-up cursor-pointer"
+                  key={group.name}
+                  className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
                   style={{ animationDelay: `${index * 0.03}s` }}
-                  onClick={() => toggleItem(ingredient.name)}
+                  onClick={() => handleToggle(group)}
                 >
-                  <Checkbox
-  checked={false}
-  onCheckedChange={() => toggleItem(ingredient.name)}
-  className="shrink-0 pointer-events-none"
-                  />
+                  <Checkbox checked={false} onCheckedChange={() => handleToggle(group)} className="shrink-0 pointer-events-none" />
                   <div className="flex-1">
-                    <p className="font-medium text-foreground">{ingredient.name}</p>
+                    <p className="font-medium text-foreground">{group.name}</p>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {ingredient.days.map((day, i) => (
-                        <Badge
-                          key={i}
-                          variant="secondary"
-                          className="text-xs bg-primary/10 text-primary border-primary/20"
-                        >
-                          {day}
-                        </Badge>
+                      {group.days.map((day, i) => (
+                        <Badge key={i} variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">{day}</Badge>
                       ))}
                     </div>
                   </div>
-                  {ingredient.days.length > 1 && (
-                    <Badge variant="outline" className="ml-2 shrink-0">
-                      ×{ingredient.days.length}
-                    </Badge>
+                  {group.days.length > 1 && (
+                    <Badge variant="outline" className="ml-2 shrink-0">×{group.days.length}</Badge>
                   )}
                 </div>
               ))}
 
-              {/* Divider between checked and unchecked */}
               {checked.length > 0 && unchecked.length > 0 && (
                 <div className="flex items-center gap-2 py-2">
                   <div className="flex-1 h-px bg-border" />
@@ -114,27 +90,19 @@ const ShoppingList = ({ ingredients, onClose }: ShoppingListProps) => {
                 </div>
               )}
 
-              {/* Checked items */}
-              {checked.map((ingredient) => (
+              {checked.map((group) => (
                 <div
-                  key={ingredient.name}
+                  key={group.name}
                   className="flex items-center gap-3 p-4 rounded-lg bg-muted/20 transition-colors cursor-pointer opacity-60"
-                  onClick={() => toggleItem(ingredient.name)}
+                  onClick={() => handleToggle(group)}
                 >
-                  <Checkbox
-  checked={true}
-  onCheckedChange={() => toggleItem(ingredient.name)}
-  className="shrink-0 pointer-events-none"
-                  />
+                  <Checkbox checked={true} onCheckedChange={() => handleToggle(group)} className="shrink-0 pointer-events-none" />
                   <div className="flex-1">
-                    <p className="font-medium line-through text-muted-foreground">
-                      {ingredient.name}
-                    </p>
+                    <p className="font-medium line-through text-muted-foreground">{group.name}</p>
                   </div>
                 </div>
               ))}
 
-              {/* All done message */}
               {checked.length === groupedIngredients.length && groupedIngredients.length > 0 && (
                 <div className="text-center py-6 text-muted-foreground">
                   <p className="text-lg">🎉 All done!</p>

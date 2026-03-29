@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 
 interface FamilyContextType {
@@ -13,13 +13,23 @@ interface FamilyContextType {
 const FamilyContext = createContext<FamilyContextType | null>(null)
 
 export const FamilyProvider = ({ children }: { children: ReactNode }) => {
-  const [familyId, setFamilyId] = useState<string | null>(localStorage.getItem('familyId'))
-  const [familyCode, setFamilyCode] = useState<string | null>(localStorage.getItem('familyCode'))
-  const [familyName, setFamilyName] = useState<string | null>(localStorage.getItem('familyName'))
+  const [familyId, setFamilyId] = useState<string | null>(
+    localStorage.getItem('familyId')
+  )
+  const [familyCode, setFamilyCode] = useState<string | null>(
+    localStorage.getItem('familyCode')
+  )
+  const [familyName, setFamilyName] = useState<string | null>(
+    localStorage.getItem('familyName')
+  )
 
   const createFamily = async (name: string): Promise<string> => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase()
-    const { data, error } = await supabase.from('families').insert({ name, code }).select().single()
+    const { data, error } = await supabase
+      .from('families')
+      .insert({ name, code })
+      .select()
+      .single()
     if (error) throw error
     setFamilyId(data.id)
     setFamilyCode(data.code)
@@ -31,7 +41,11 @@ export const FamilyProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const joinFamily = async (code: string): Promise<boolean> => {
-    const { data, error } = await supabase.from('families').select().eq('code', code.toUpperCase()).single()
+    const { data, error } = await supabase
+      .from('families')
+      .select()
+      .eq('code', code.toUpperCase())
+      .single()
     if (error || !data) return false
     setFamilyId(data.id)
     setFamilyCode(data.code)

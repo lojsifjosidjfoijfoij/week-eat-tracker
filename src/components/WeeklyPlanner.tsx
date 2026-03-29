@@ -37,7 +37,16 @@ const WeeklyPlanner = () => {
 
   const DAYS = [t.monday, t.tuesday, t.wednesday, t.thursday, t.friday, t.saturday, t.sunday];
 
-  const [weekData, setWeekData] = useState<WeekData>(EMPTY_WEEK(DAYS));
+  const [weekData, setWeekData] = useState<WeekData>(() => {
+    if (!familyId) {
+      const saved = localStorage.getItem("mealWeekPlanner");
+      if (saved) {
+        try { return JSON.parse(saved); } catch {}
+      }
+    }
+    return EMPTY_WEEK(DAYS);
+  });
+
   const [showShoppingList, setShowShoppingList] = useState(false);
   const [showFamilyPanel, setShowFamilyPanel] = useState(false);
   const [familyNameInput, setFamilyNameInput] = useState("");
@@ -45,17 +54,15 @@ const WeeklyPlanner = () => {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Load data from Supabase when family is set
   useEffect(() => {
-    if (familyId) {
-      loadFromSupabase();
-    } else {
-      const saved = localStorage.getItem("mealWeekPlanner");
-      if (saved) {
-        try { setWeekData(JSON.parse(saved)); } catch {}
-      }
-    }
+    if (!familyId) return;
+    loadFromSupabase();
+    const unsub = subscribeToChanges();
+    return () => { unsub(); };
   }, [familyId]);
 
+  // Save to localStorage when no family
   useEffect(() => {
     if (!familyId) {
       localStorage.setItem("mealWeekPlanner", JSON.stringify(weekData));
@@ -65,27 +72,57 @@ const WeeklyPlanner = () => {
   const loadFromSupabase = async () => {
     if (!familyId) return;
     setLoading(true);
+
     const [mealsRes, ingredientsRes] = await Promise.all([
       supabase.from("meal_plans").select("*").eq("family_id", familyId),
       supabase.from("ingredients").select("*").eq("family_id", familyId),
     ]);
+
     const newData = EMPTY_WEEK(DAYS);
+
     mealsRes.data?.forEach((m) => {
-      if (newData[m.day_index] !== undefined) newData[m.day_index].meal = m.meal || "";
-    });
-    ingredientsRes.data?.forEach((ing) => {
-      if (newData[ing.day_index] !== undefined) {
-        newData[ing.day_index].ingredients.push({ id: ing.id, name: ing.name, checked: ing.checked });
+      if (newData[m.day_index] !== undefined) {
+        newData[m.day_index].meal = m.meal || "";
       }
     });
+
+    ingredientsRes.data?.forEach((ing) => {
+      if (newData[ing.day_index] !== undefined) {
+        newData[ing.day_index].ingredients.push({
+          id: ing.id,
+          name: ing.name,
+          checked: ing.checked,
+        });
+      }
+    });
+
     setWeekData(newData);
     setLoading(false);
   };
 
+  const subscribeToChanges = () => {
+    const channel = supabase
+      .channel("family-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "meal_plans", filter: `family_id=eq.${familyId}` }, loadFromSupabase)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ingredients", filter: `family_id=eq.${familyId}` }, loadFromSupabase)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  };
+
   const handleMealChange = async (dayIndex: number, meal: string) => {
-    setWeekData((prev) => ({ ...prev, [dayIndex]: { ...prev[dayIndex], meal } }));
+    setWeekData((prev) => ({
+      ...prev,
+      [dayIndex]: { ...prev[dayIndex], meal },
+    }));
+
     if (familyId) {
-      const existing = await supabase.from("meal_plans").select("id").eq("family_id", familyId).eq("day_index", dayIndex).single();
+      const existing = await supabase
+        .from("meal_plans")
+        .select("id")
+        .eq("family_id", familyId)
+        .eq("day_index", dayIndex)
+        .single();
+
       if (existing.data) {
         await supabase.from("meal_plans").update({ meal }).eq("id", existing.data.id);
       } else {
@@ -97,7 +134,12 @@ const WeeklyPlanner = () => {
   const handleAddIngredient = async (dayIndex: number, name: string) => {
     const id = `${dayIndex}-${Date.now()}`;
     const newIngredient: Ingredient = { id, name, checked: false };
-    setWeekData((prev) => ({ ...prev, [dayIndex]: { ...prev[dayIndex], ingredients: [...prev[dayIndex].ingredients, newIngredient] } }));
+
+    setWeekData((prev) => ({
+      ...prev,
+      [dayIndex]: { ...prev[dayIndex], ingredients: [...prev[dayIndex].ingredients, newIngredient] },
+    }));
+
     if (familyId) {
       await supabase.from("ingredients").insert({ id, family_id: familyId, day_index: dayIndex, name, checked: false });
     }
@@ -106,14 +148,31 @@ const WeeklyPlanner = () => {
   const handleToggleIngredient = async (dayIndex: number, id: string) => {
     const ingredient = weekData[dayIndex].ingredients.find((i) => i.id === id);
     if (!ingredient) return;
-    setWeekData((prev) => ({ ...prev, [dayIndex]: { ...prev[dayIndex], ingredients: prev[dayIndex].ingredients.map((ing) => ing.id === id ? { ...ing, checked: !ing.checked } : ing) } }));
+
+    setWeekData((prev) => ({
+      ...prev,
+      [dayIndex]: {
+        ...prev[dayIndex],
+        ingredients: prev[dayIndex].ingredients.map((ing) =>
+          ing.id === id ? { ...ing, checked: !ing.checked } : ing
+        ),
+      },
+    }));
+
     if (familyId) {
       await supabase.from("ingredients").update({ checked: !ingredient.checked }).eq("id", id);
     }
   };
 
   const handleDeleteIngredient = async (dayIndex: number, id: string) => {
-    setWeekData((prev) => ({ ...prev, [dayIndex]: { ...prev[dayIndex], ingredients: prev[dayIndex].ingredients.filter((ing) => ing.id !== id) } }));
+    setWeekData((prev) => ({
+      ...prev,
+      [dayIndex]: {
+        ...prev[dayIndex],
+        ingredients: prev[dayIndex].ingredients.filter((ing) => ing.id !== id),
+      },
+    }));
+
     if (familyId) {
       await supabase.from("ingredients").delete().eq("id", id);
     }
@@ -133,7 +192,9 @@ const WeeklyPlanner = () => {
   const getAllIngredients = () => {
     const all: { name: string; checked: boolean; day: string }[] = [];
     DAYS.forEach((day, index) => {
-      weekData[index].ingredients.forEach((ing) => { all.push({ ...ing, day }); });
+      weekData[index].ingredients.forEach((ing) => {
+        all.push({ ...ing, day, dayIndex: index });
+      });
     });
     return all;
   };
@@ -142,7 +203,7 @@ const WeeklyPlanner = () => {
     if (!familyNameInput.trim()) return;
     const code = await createFamily(familyNameInput.trim());
     setFamilyNameInput("");
-    toast({ title: "Family created!", description: `Your code is ${code}` });
+    toast({ title: "Family created! 🎉", description: `Your family code is ${code}` });
   };
 
   const handleJoinFamily = async () => {
@@ -152,7 +213,7 @@ const WeeklyPlanner = () => {
       setJoinCodeInput("");
       setShowFamilyPanel(false);
       loadFromSupabase();
-      toast({ title: "Joined family!" });
+      toast({ title: "Joined family! 🎉" });
     } else {
       toast({ title: "Code not found", description: "Check the code and try again.", variant: "destructive" });
     }
@@ -169,7 +230,9 @@ const WeeklyPlanner = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-wrap gap-3 justify-center mb-8">
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-3 justify-center mb-8 animate-fade-in">
           <Button onClick={() => setShowShoppingList(!showShoppingList)} className="bg-primary hover:bg-primary-hover text-primary-foreground shadow-md">
             <ShoppingCart className="h-4 w-4 mr-2" />
             {t.shoppingList}
@@ -184,14 +247,17 @@ const WeeklyPlanner = () => {
           </Button>
         </div>
 
+        {/* Family Panel */}
         {showFamilyPanel && (
-          <div className="mb-8 p-6 rounded-xl border bg-card shadow-sm max-w-md mx-auto">
+          <div className="mb-8 p-6 rounded-xl border bg-card shadow-sm animate-fade-in max-w-md mx-auto">
             {familyId ? (
               <div className="space-y-4">
-                <h2 className="text-lg font-semibold">Family: {familyName}</h2>
-                <p className="text-sm text-muted-foreground">Share this code with your family:</p>
+                <h2 className="text-lg font-semibold">👨‍👩‍👧 {familyName}</h2>
+                <p className="text-sm text-muted-foreground">Share this code with your family so they can join:</p>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 text-2xl font-bold tracking-widest text-center py-3 bg-muted rounded-lg">{familyCode}</div>
+                  <div className="flex-1 text-2xl font-bold tracking-widest text-center py-3 bg-muted rounded-lg">
+                    {familyCode}
+                  </div>
                   <Button size="icon" variant="outline" onClick={copyCode}>
                     {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                   </Button>
@@ -222,12 +288,19 @@ const WeeklyPlanner = () => {
           </div>
         )}
 
+        {/* Shopping List Modal */}
         {showShoppingList && (
-          <ShoppingList ingredients={getAllIngredients()} onClose={() => setShowShoppingList(false)} />
+          <ShoppingList ingredients={getAllIngredients()} onClose={() => setShowShoppingList(false)} onToggle={handleToggleIngredient} />
         )}
 
-        {loading && <div className="text-center py-4 text-muted-foreground">Syncing with family...</div>}
+        {/* Loading */}
+        {loading && (
+          <div className="text-center py-4 text-muted-foreground animate-pulse">
+            Syncing with family...
+          </div>
+        )}
 
+        {/* Days Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {DAYS.map((day, index) => (
             <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
