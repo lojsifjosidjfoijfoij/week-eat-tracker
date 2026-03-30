@@ -25,13 +25,24 @@ struct Provider: TimelineProvider {
     }
 
     func getMealForToday() -> String {
-        let defaults = UserDefaults(suiteName: "group.com.Louis.weekplate")
-        let weekData = defaults?.string(forKey: "mealWeekPlanner") ?? ""
+        let sharedDefaults = UserDefaults(suiteName: "group.com.Louis.weekplate")
         
-        if weekData.isEmpty { return "No meal planned" }
+        // Try shared defaults first
+        if let data = sharedDefaults?.string(forKey: "mealWeekPlanner") {
+            return parseMeal(from: data)
+        }
         
-        guard let data = weekData.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+        // Fall back to standard defaults
+        if let data = UserDefaults.standard.string(forKey: "mealWeekPlanner") {
+            return parseMeal(from: data)
+        }
+        
+        return "No meal planned"
+    }
+
+    func parseMeal(from data: String) -> String {
+        guard let jsonData = data.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
             return "No meal planned"
         }
         

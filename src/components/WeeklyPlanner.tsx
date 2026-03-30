@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
 import DayCard from "./DayCard";
 import ShoppingList from "./ShoppingList";
 import Settings from "@/pages/Settings";
-import { saveMealToWidget } from "@/lib/supabase";
+import { saveMealToWidget } from "@/lib/sharedStorage";
 
 interface Ingredient {
   id: string;
