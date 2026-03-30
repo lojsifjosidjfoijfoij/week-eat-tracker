@@ -15,24 +15,42 @@ const Login = () => {
   const { toast } = useToast();
 
   const handleSubmit = async () => {
-    if (!email || !password) return;
-    setLoading(true);
+  if (!email || !password) {
+    toast({ title: "Missing fields", description: "Please enter your email and password.", variant: "destructive" });
+    return;
+  }
+  setLoading(true);
 
-    if (isSignUp) {
-      const { error } = await signUp(email, password, fullName);
-      if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
+  if (isSignUp) {
+    if (password.length < 6) {
+      toast({ title: "Password too short", description: "Password must be at least 6 characters.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+    const { error } = await signUp(email, password, fullName);
+    if (error) {
+      if (error.message.includes("already registered")) {
+        toast({ title: "Email already in use", description: "Try signing in instead.", variant: "destructive" });
       } else {
-        toast({ title: "Account created!", description: "Please check your email to confirm your account." });
+        toast({ title: "Error", description: error.message, variant: "destructive" });
       }
     } else {
-      const { error } = await signIn(email, password);
-      if (error) {
+      toast({ title: "Account created!", description: "Please check your email to confirm your account." });
+    }
+  } else {
+    const { error } = await signIn(email, password);
+    if (error) {
+      if (error.message.includes("Invalid login")) {
+        toast({ title: "Wrong email or password", description: "Please check your details and try again.", variant: "destructive" });
+      } else if (error.message.includes("Email not confirmed")) {
+        toast({ title: "Email not confirmed", description: "Please check your inbox and confirm your email first.", variant: "destructive" });
+      } else {
         toast({ title: "Error", description: error.message, variant: "destructive" });
       }
     }
-    setLoading(false);
-  };
+  }
+  setLoading(false);
+};
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">

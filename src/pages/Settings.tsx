@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { User, Users, LogOut, ChevronRight, Mail, Crown } from "lucide-react";
+import { User, Users, LogOut, ChevronRight, Mail, Crown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -8,6 +8,8 @@ import { useFamily } from "@/contexts/FamilyContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { scheduleMondayReminder, cancelMondayReminder } from "@/lib/notifications";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { languageNames, Language } from "@/lib/translations";
 
 const Settings = ({ onClose }: { onClose: () => void }) => {
   const { user, signOut } = useAuth();
@@ -21,6 +23,7 @@ const Settings = ({ onClose }: { onClose: () => void }) => {
   const [notificationsOn, setNotificationsOn] = useState(
   localStorage.getItem("monday_reminder") === "true"
 );
+const { language, setLanguage } = useLanguage();
 
   const handleCreateFamily = async () => {
     if (!familyNameInput.trim()) return;
@@ -209,6 +212,24 @@ const Settings = ({ onClose }: { onClose: () => void }) => {
         </div>
 
         <div>
+<div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Language</p>
+          <Card className="divide-y">
+            {(Object.keys(languageNames) as Language[]).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setLanguage(lang)}
+                className="flex items-center justify-between p-4 w-full hover:bg-muted/50 transition-colors"
+              >
+                <span className="text-sm">{languageNames[lang]}</span>
+                {language === lang && (
+                  <Check className="h-4 w-4 text-foreground" />
+                )}
+              </button>
+            ))}
+          </Card>
+        </div>
+
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Notifications</p>
           <Card>
             <div className="flex items-center justify-between p-4">

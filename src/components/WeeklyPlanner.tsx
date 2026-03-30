@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { RotateCcw, ShoppingCart, Settings as SettingsIcon, Users, LogOut, Copy, Check } from "lucide-react";
+import { RotateCcw, ShoppingCart, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFamily } from "@/contexts/FamilyContext";
@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import DayCard from "./DayCard";
 import ShoppingList from "./ShoppingList";
 import Settings from "@/pages/Settings";
+import { saveMealToWidget } from "@/lib/supabase";
 
 interface Ingredient {
   id: string;
@@ -34,7 +35,7 @@ const EMPTY_WEEK = (days: string[]): WeekData =>
 const WeeklyPlanner = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
-  const { familyId, familyCode, familyName, createFamily, joinFamily, leaveFamily } = useFamily();
+  const { familyId, createFamily, joinFamily, leaveFamily } = useFamily();
 
   const DAYS = [t.monday, t.tuesday, t.wednesday, t.thursday, t.friday, t.saturday, t.sunday];
 
@@ -42,6 +43,7 @@ const WeeklyPlanner = () => {
   const [showShoppingList, setShowShoppingList] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
 
   useEffect(() => {
     if (familyId) {
@@ -54,11 +56,12 @@ const WeeklyPlanner = () => {
     }
   }, [familyId]);
 
-  useEffect(() => {
-    if (!familyId) {
-      localStorage.setItem("mealWeekPlanner", JSON.stringify(weekData));
-    }
-  }, [weekData, familyId]);
+ useEffect(() => {
+  if (!familyId) {
+    localStorage.setItem("mealWeekPlanner", JSON.stringify(weekData));
+  }
+  saveMealToWidget(weekData);
+}, [weekData, familyId]);
 
   const loadFromSupabase = async () => {
     if (!familyId) return;
@@ -118,6 +121,7 @@ const WeeklyPlanner = () => {
   };
 
   const handleResetWeek = async () => {
+    setResetKey(prev => prev + 1);
     setWeekData(EMPTY_WEEK(DAYS));
     if (familyId) {
       await supabase.from("meal_plans").delete().eq("family_id", familyId);
@@ -125,7 +129,6 @@ const WeeklyPlanner = () => {
     } else {
       localStorage.removeItem("mealWeekPlanner");
     }
-    toast({ title: t.resetWeek, description: t.confirmReset });
   };
 
   const getAllIngredients = () => {
@@ -149,10 +152,28 @@ const WeeklyPlanner = () => {
             <SettingsIcon className="h-4 w-4 mr-2" />
             Settings
           </Button>
-          <Button onClick={handleResetWeek} variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10">
-            <RotateCcw className="h-4 w-4 mr-2" />
-            {t.resetWeek}
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10">
+                <RotateCcw className="h-4 w-4 mr-2" />
+                {t.resetWeek}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset the week?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will clear all meals and ingredients. This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleResetWeek} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Reset
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         {showShoppingList && (
@@ -167,7 +188,7 @@ const WeeklyPlanner = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {DAYS.map((day, index) => (
-            <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+            <div key={`${index}-${resetKey}`} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
               <DayCard
                 day={day}
                 meal={weekData[index].meal}
