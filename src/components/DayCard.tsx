@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import IngredientItem from "./IngredientItem";
+import { supabase } from "@/lib/supabase";
 
 interface Ingredient {
   id: string;
@@ -61,39 +62,42 @@ const DayCard = ({
     }
   };
 
-  const fetchSuggestions = async (mealName: string) => {
-    setIsLoadingSuggestions(true);
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/suggest-ingredients`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ mealName, language: t.languageCode }),
-        }
-      );
+ const fetchSuggestions = async (mealName: string) => {
+  setIsLoadingSuggestions(true);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to get suggestions");
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/suggest-ingredients`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ mealName, language: t.languageCode }),
       }
+    );
 
-      const data = await response.json();
-      setSuggestedIngredients(data.ingredients || []);
-    } catch (error) {
-      console.error("Error fetching suggestions:", error);
-      toast({
-        title: t.couldntGetSuggestions,
-        description: error instanceof Error ? error.message : t.pleaseTryAgain,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingSuggestions(false);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to get suggestions");
     }
-  };
+
+    const data = await response.json();
+    setSuggestedIngredients(data.ingredients || []);
+  } catch (error) {
+    console.error("Error fetching suggestions:", error);
+    toast({
+      title: t.couldntGetSuggestions,
+      description: error instanceof Error ? error.message : t.pleaseTryAgain,
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoadingSuggestions(false);
+  }
+};
 
   const handleAddSuggestedIngredient = (ingredient: string) => {
     onAddIngredient(ingredient);
