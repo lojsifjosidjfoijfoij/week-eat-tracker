@@ -20,47 +20,38 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const languageName = language === "da" ? "Danish" : language === "de" ? "German" : language === "fr" ? "French" : language === "es" ? "Spanish" : "English";
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
-            content: `You are a helpful cooking assistant. When given a meal name, suggest a list of common ingredients needed for that dish. Return ONLY a JSON array of ingredient names as strings, nothing else. Example format: ["Spaghetti", "Ground beef", "Tomatoes", "Garlic", "Onion", "Olive oil", "Basil"]. Keep the list between 5-8 items. IMPORTANT: Respond in ${language === "en" ? "English" : language === "da" ? "Danish" : language === "de" ? "German" : language === "fr" ? "French" : language === "es" ? "Spanish" : "English"}. All ingredient names must be in that language.`
+            content: `You are a helpful cooking assistant. When given a meal name, suggest a list of common ingredients needed for that dish. Return ONLY a JSON array of ingredient names as strings, nothing else. Example format: ["Spaghetti", "Ground beef", "Tomatoes", "Garlic"]. Keep the list between 5-8 items. Respond in ${languageName}.`
           },
           {
             role: "user",
             content: `Suggest ingredients for: ${mealName}`
           }
         ],
+        max_tokens: 200,
       }),
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      console.error("OpenAI error:", response.status, errorText);
       return new Response(
         JSON.stringify({ error: "AI service error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -70,29 +61,17 @@ serve(async (req) => {
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
     
-    if (!content) {
-      throw new Error("No response from AI");
-    }
+    if (!content) throw new Error("No response from AI");
 
-    // Parse the JSON array from the response
     let ingredients: string[];
     try {
-      // Remove any markdown code blocks if present
       const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       ingredients = JSON.parse(cleanContent);
-      
-      // Validate it's an array of strings
       if (!Array.isArray(ingredients) || !ingredients.every(item => typeof item === 'string')) {
         throw new Error("Invalid response format");
       }
-    } catch (parseError) {
-      console.error("Failed to parse AI response:", content);
-      // Fallback: try to extract ingredients from text
-      ingredients = content
-        .split(/[,\n]/)
-        .map((item: string) => item.trim())
-        .filter((item: string) => item.length > 0)
-        .slice(0, 8);
+    } catch {
+      ingredients = content.split(/[,\n]/).map((item: string) => item.trim()).filter((item: string) => item.length > 0).slice(0, 8);
     }
 
     return new Response(
@@ -100,7 +79,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Error in suggest-ingredients function:", error);
+    console.error("Error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
