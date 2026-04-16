@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { RotateCcw, ShoppingCart, Settings as SettingsIcon } from "lucide-react";
+import { RotateCcw, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +8,6 @@ import { useFamily } from "@/contexts/FamilyContext";
 import { supabase } from "@/lib/supabase";
 import DayCard from "./DayCard";
 import ShoppingList from "./ShoppingList";
-import Settings from "@/pages/Settings";
 import { saveMealToWidget } from "@/lib/sharedStorage";
 
 interface Ingredient {
@@ -41,7 +40,6 @@ const WeeklyPlanner = () => {
 
   const [weekData, setWeekData] = useState<WeekData>(EMPTY_WEEK(DAYS));
   const [showShoppingList, setShowShoppingList] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resetKey, setResetKey] = useState(0);
 
@@ -148,10 +146,6 @@ const WeeklyPlanner = () => {
             <ShoppingCart className="h-4 w-4 mr-2" />
             {t.shoppingList}
           </Button>
-          <Button onClick={() => setShowSettings(true)} variant="outline">
-            <SettingsIcon className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10">
@@ -202,7 +196,6 @@ const WeeklyPlanner = () => {
           ))}
         </div>
 
-        {showSettings && <Settings onClose={() => setShowSettings(false)} />}
       </div>
     </div>
   );

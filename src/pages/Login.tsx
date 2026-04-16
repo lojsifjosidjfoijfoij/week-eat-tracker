@@ -59,7 +59,7 @@ const Login = () => {
           <div className="flex items-center justify-center gap-2 mb-4">
             <UtensilsCrossed className="h-8 w-8" />
           </div>
-          <h1 className="text-3xl font-bold">Weekplate</h1>
+          <h1 className="text-3xl font-bold">Dinerr</h1>
           <p className="text-muted-foreground text-sm">
             {isSignUp ? "Create your account" : "Welcome back"}
           </p>

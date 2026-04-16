@@ -33,7 +33,7 @@ const AppRoutes = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-3">
-          <p className="text-2xl font-bold">Weekplate</p>
+          <p className="text-2xl font-bold">Dinerr</p>
           <p className="text-muted-foreground text-sm animate-pulse">Loading...</p>
         </div>
       </div>

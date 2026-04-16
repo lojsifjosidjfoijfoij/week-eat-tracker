@@ -1,54 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Space+Grotesk:wght@300;400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 0 0% 9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --primary-hover: 0 0% 15%;
-    --secondary: 0 0% 94%;
-    --secondary-foreground: 0 0% 9%;
-    --secondary-hover: 0 0% 88%;
-    --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 0 0% 90%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 0 0% 9%;
+    --background: 30 15% 95%;
+    --foreground: 25 12% 12%;
+    --card: 30 10% 99%;
+    --card-foreground: 25 12% 12%;
+    --popover: 30 10% 99%;
+    --popover-foreground: 25 12% 12%;
+    --primary: 25 12% 12%;
+    --primary-foreground: 30 15% 95%;
+    --primary-hover: 25 12% 20%;
+    --secondary: 30 10% 93%;
+    --secondary-foreground: 25 12% 12%;
+    --secondary-hover: 30 10% 88%;
+    --muted: 30 10% 91%;
+    --muted-foreground: 25 8% 55%;
+    --accent: 30 12% 88%;
+    --accent-foreground: 25 12% 12%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 30 15% 95%;
+    --border: 30 12% 87%;
+    --input: 30 12% 87%;
+    --ring: 25 12% 12%;
     --radius: 0.75rem;
   }
   .dark {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 0 0% 95%;
-    --primary-foreground: 0 0% 7%;
-    --primary-hover: 0 0% 85%;
-    --secondary: 0 0% 14%;
-    --secondary-foreground: 0 0% 95%;
-    --secondary-hover: 0 0% 18%;
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 55%;
-    --accent: 0 0% 18%;
-    --accent-foreground: 0 0% 95%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 95%;
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 0 0% 95%;
+    --background: 25 10% 9%;
+    --foreground: 30 12% 92%;
+    --card: 25 10% 12%;
+    --card-foreground: 30 12% 92%;
+    --popover: 25 10% 12%;
+    --popover-foreground: 30 12% 92%;
+    --primary: 30 12% 92%;
+    --primary-foreground: 25 10% 9%;
+    --primary-hover: 30 12% 82%;
+    --secondary: 25 10% 17%;
+    --secondary-foreground: 30 12% 92%;
+    --secondary-hover: 25 10% 22%;
+    --muted: 25 10% 17%;
+    --muted-foreground: 30 8% 55%;
+    --accent: 25 10% 20%;
+    --accent-foreground: 30 12% 92%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 30 12% 92%;
+    --border: 25 10% 22%;
+    --input: 25 10% 22%;
+    --ring: 30 12% 92%;
   }
 }
 
@@ -56,35 +58,51 @@
   * { @apply border-border; }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Space Grotesk', sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
 @layer components {
+  /* Brand name uses Playfair Display */
+  .brand-name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
   .ingredient-checkbox {
-    @apply h-4 w-4 rounded border border-border transition-all duration-150;
+    @apply rounded-full border-2 border-border transition-all duration-150;
     @apply data-[state=checked]:bg-foreground data-[state=checked]:border-foreground;
   }
-  .day-card {
-    @apply transition-all duration-200 hover:shadow-sm;
+
+  .week-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-muted;
+  }
+
+  /* Settings icon button */
+  .icon-btn {
+    @apply w-8 h-8 rounded-full flex items-center justify-center
+           text-muted-foreground hover:text-foreground hover:bg-muted
+           transition-all duration-150;
   }
 }
 
 @layer utilities {
-  .animate-fade-in { animation: fadeIn 0.2s ease-out; }
+  .animate-fade-in  { animation: fadeIn  0.2s ease-out; }
   .animate-slide-up { animation: slideUp 0.2s ease-out; }
   .animate-scale-in { animation: scaleIn 0.15s ease-out; }
 
   @keyframes fadeIn {
     from { opacity: 0; }
-    to { opacity: 1; }
+    to   { opacity: 1; }
   }
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
   @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from { opacity: 0; transform: scale(0.97); }
+    to   { opacity: 1; transform: scale(1); }
   }
 }

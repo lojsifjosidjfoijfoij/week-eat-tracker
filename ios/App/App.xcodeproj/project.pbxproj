@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
-		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
 		504EC30D1FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30B1FED79650016851F /* Main.storyboard */; };
@@ -18,8 +17,7 @@
 		CF6E7BD02F7A6EFB00A2AACA /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CF6E7BCF2F7A6EFB00A2AACA /* WidgetKit.framework */; };
 		CF6E7BD22F7A6EFB00A2AACA /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CF6E7BD12F7A6EFB00A2AACA /* SwiftUI.framework */; };
 		CF6E7BE32F7A6EFD00A2AACA /* WeekplateWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CF6E7BCD2F7A6EFB00A2AACA /* WeekplateWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		CF6E7BF32F7A7AC600A2AACA /* SharedStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6E7BF22F7A7ABD00A2AACA /* SharedStorage.swift */; };
-		CF6E7BF52F7A7E4F00A2AACA /* SharedStorageBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = CF6E7BF42F7A7E4F00A2AACA /* SharedStorageBridge.m */; };
+		CF862CC22F917D6D00F6872C /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = CF862CC12F917D6D00F6872C /* CapApp-SPM */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,8 +59,6 @@
 		CF6E7BCF2F7A6EFB00A2AACA /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		CF6E7BD12F7A6EFB00A2AACA /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		CF6E7BE92F7A6FBB00A2AACA /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
-		CF6E7BF22F7A7ABD00A2AACA /* SharedStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStorage.swift; sourceTree = "<group>"; };
-		CF6E7BF42F7A7E4F00A2AACA /* SharedStorageBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SharedStorageBridge.m; sourceTree = "<group>"; };
 		CF6E7BF62F7A7E6700A2AACA /* App-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "App-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -85,7 +81,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */,
+				CF862CC22F917D6D00F6872C /* CapApp-SPM in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,8 +120,6 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
-				CF6E7BF42F7A7E4F00A2AACA /* SharedStorageBridge.m */,
-				CF6E7BF22F7A7ABD00A2AACA /* SharedStorage.swift */,
 				CF6E7BE92F7A6FBB00A2AACA /* App.entitlements */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
@@ -168,7 +162,7 @@
 			);
 			name = App;
 			packageProductDependencies = (
-				4D22ABE82AF431CB00220026 /* CapApp-SPM */,
+				CF862CC12F917D6D00F6872C /* CapApp-SPM */,
 			);
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
@@ -225,7 +219,7 @@
 			);
 			mainGroup = 504EC2FB1FED79650016851F;
 			packageReferences = (
-				D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */,
+				CF862CC02F917CF700F6872C /* XCLocalSwiftPackageReference "CapApp-SPM" */,
 			);
 			productRefGroup = 504EC3051FED79650016851F /* Products */;
 			projectDirPath = "";
@@ -265,9 +259,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CF6E7BF32F7A7AC600A2AACA /* SharedStorage.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
-				CF6E7BF52F7A7E4F00A2AACA /* SharedStorageBridge.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -587,16 +579,16 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */ = {
+		CF862CC02F917CF700F6872C /* XCLocalSwiftPackageReference "CapApp-SPM" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "CapApp-SPM";
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4D22ABE82AF431CB00220026 /* CapApp-SPM */ = {
+		CF862CC12F917D6D00F6872C /* CapApp-SPM */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */;
+			package = CF862CC02F917CF700F6872C /* XCLocalSwiftPackageReference "CapApp-SPM" */;
 			productName = "CapApp-SPM";
 		};
 /* End XCSwiftPackageProductDependency section */
