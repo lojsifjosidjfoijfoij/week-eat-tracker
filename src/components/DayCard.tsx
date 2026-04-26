@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Plus, Trash2, Sparkles } from "lucide-react";
+import { Plus, Trash2, Sparkles, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePremium } from "@/contexts/PremiumContext";
 import { supabase } from "@/lib/supabase";
 
 interface Ingredient {
@@ -30,6 +31,7 @@ const DayCard = ({
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { isPremium, openPaywall } = usePremium();
 
   const completedCount = ingredients.filter((i) => i.checked).length;
   const totalCount = ingredients.length;
@@ -45,7 +47,9 @@ const DayCard = ({
   const handleMealBlur = async () => {
     if (meal && meal !== "") {
       setIsEditingMeal(false);
-      if (ingredients.length === 0) await fetchSuggestions(meal);
+      if (ingredients.length === 0 && isPremium) {
+        await fetchSuggestions(meal);
+      }
     }
   };
 
@@ -77,30 +81,22 @@ const DayCard = ({
   };
 
   return (
-    <div className="bg-card rounded-xl border border-border animate-fade-in overflow-hidden">
+    <div className="day-card animate-fade-in">
 
-      {/* ── Card header: day label + progress ── */}
-      <div className="px-3 py-2.5 flex items-center justify-between border-b border-border">
-        <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
-          {day}
-        </span>
+      <div className="day-card__hd">
+        <span className="day-card__label">{day}</span>
         {totalCount > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{completedCount}/{totalCount}</span>
-            <div className="w-10 h-1 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-foreground rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
+          <div className="day-card__progress">
+            <span className="day-card__progress-count">{completedCount}/{totalCount}</span>
+            <div className="day-card__bar">
+              <div className="day-card__fill" style={{ width: `${progress}%` }} />
             </div>
           </div>
         )}
       </div>
 
-      {/* ── Card body ── */}
-      <div className="px-3 pt-3 pb-3">
+      <div className="day-card__body">
 
-        {/* Meal name — Playfair for visual weight */}
         {isEditingMeal ? (
           <input
             type="text"
@@ -110,58 +106,46 @@ const DayCard = ({
             onBlur={handleMealBlur}
             onKeyPress={(e) => e.key === "Enter" && handleMealBlur()}
             autoFocus
-            style={{ fontFamily: "'Playfair Display', serif" }}
-            className="w-full bg-transparent text-base font-normal text-foreground outline-none placeholder:text-muted-foreground/40 mb-3"
+            className="meal-input"
           />
         ) : (
-          <button onClick={() => setIsEditingMeal(true)} className="text-left w-full mb-3 group">
-            {meal ? (
-              <span
-                style={{ fontFamily: "'Playfair Display', serif" }}
-                className="text-base text-foreground group-hover:opacity-60 transition-opacity"
-              >
-                {meal}
-              </span>
-            ) : (
-              <span className="text-sm font-light text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
-                {t.addMeal}
-              </span>
-            )}
+          <button
+            onClick={() => setIsEditingMeal(true)}
+            className={`meal-display${!meal ? " meal-display--empty" : ""}`}
+          >
+            {meal || t.addMeal}
           </button>
         )}
 
         {/* AI loading */}
         {isLoadingSuggestions && (
-          <div className="flex items-center gap-1.5 mb-3 animate-fade-in">
-            <Sparkles className="h-3 w-3 text-muted-foreground animate-pulse" />
-            <span className="text-xs text-muted-foreground">{t.gettingSuggestions}</span>
+          <div className="ai-loading">
+            <Sparkles size={12} />
+            <span>{t.gettingSuggestions}</span>
           </div>
         )}
 
-        {/* AI suggestions */}
-        {suggestedIngredients.length > 0 && (
-          <div className="mb-3 animate-fade-in">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Sparkles className="h-3 w-3" />
+        {/* AI suggestions — premium only */}
+        {isPremium && suggestedIngredients.length > 0 && (
+          <div>
+            <div className="ai-bar">
+              <span className="ai-label">
+                <Sparkles size={10} />
                 {t.suggestedIngredients}
               </span>
-              <button
-                onClick={() => setSuggestedIngredients([])}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
+              <button className="ai-dismiss" onClick={() => setSuggestedIngredients([])}>
                 {t.dismiss}
               </button>
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="suggestion-chips">
               {suggestedIngredients.map((ingredient, index) => (
                 <button
                   key={index}
+                  className="suggestion-chip"
                   onClick={() => {
                     onAddIngredient(ingredient);
                     setSuggestedIngredients((prev) => prev.filter((i) => i !== ingredient));
                   }}
-                  className="text-xs px-2.5 py-1 rounded-full border border-border bg-muted hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-150"
                 >
                   + {ingredient}
                 </button>
@@ -170,63 +154,54 @@ const DayCard = ({
           </div>
         )}
 
-        {/* Ingredients list */}
+        {/* Premium upsell for AI — free users only, only when meal is set */}
+        {!isPremium && meal && ingredients.length === 0 && (
+          <button className="premium-gate" onClick={openPaywall}>
+            <span className="premium-gate__icon">✨</span>
+            <div className="premium-gate__text">
+              <p className="premium-gate__label">AI ingredient suggestions</p>
+              <p className="premium-gate__sub">Upgrade to Premium</p>
+            </div>
+            <Lock size={14} className="premium-gate__arrow" />
+          </button>
+        )}
+
+        {/* Ingredients */}
         {ingredients.length > 0 && (
-          <div className="mb-2.5 border-t border-border/50 pt-2.5">
+          <div className="ingredient-list">
             {ingredients.map((ingredient) => (
-              <div
-                key={ingredient.id}
-                className="flex items-center gap-2 py-1.5 group border-b border-border/30 last:border-b-0"
-              >
+              <div key={ingredient.id} className="ingredient-row">
                 <button
+                  className={`ingredient-check${ingredient.checked ? " is-checked" : ""}`}
                   onClick={() => onToggleIngredient(ingredient.id)}
-                  className={`w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
-                    ingredient.checked
-                      ? "bg-foreground border-foreground"
-                      : "border-border hover:border-muted-foreground"
-                  }`}
-                >
-                  {ingredient.checked && (
-                    <div className="w-1.5 h-1.5 rounded-full bg-background" />
-                  )}
-                </button>
-                <span
-                  className={`flex-1 text-sm font-light transition-all ${
-                    ingredient.checked
-                      ? "line-through text-muted-foreground/40"
-                      : "text-foreground"
-                  }`}
-                >
+                />
+                <span className={`ingredient-name${ingredient.checked ? " is-checked" : ""}`}>
                   {ingredient.name}
                 </span>
                 <button
+                  className="ingredient-delete"
                   onClick={() => onDeleteIngredient(ingredient.id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive transition-colors" />
+                  <Trash2 size={13} />
                 </button>
               </div>
             ))}
           </div>
         )}
 
-        {/* Add ingredient row */}
-        <div className="flex items-center gap-2 pt-1 border-t border-border/40">
+        <div className="add-row">
           <input
             type="text"
             placeholder={t.addIngredient}
             value={newIngredient}
             onChange={(e) => setNewIngredient(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleAddIngredient()}
-            className="flex-1 bg-transparent text-sm font-light outline-none placeholder:text-muted-foreground/35"
           />
-          <button
-            onClick={handleAddIngredient}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5" />
+          <button onClick={handleAddIngredient}>
+            <Plus size={14} strokeWidth={2.5} />
           </button>
         </div>
+
       </div>
     </div>
   );
