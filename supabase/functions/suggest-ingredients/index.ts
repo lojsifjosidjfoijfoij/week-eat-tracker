@@ -69,19 +69,28 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: `You are a helpful cooking assistant. When given a meal name, suggest a list of common ingredients needed for that dish. Return ONLY a JSON array of ingredient names as strings, nothing else. Example format: ["Spaghetti", "Ground beef", "Tomatoes", "Garlic"]. Keep the list between 5-8 items. Respond in ${languageName}.`
-          },
-          {
-            role: "user",
-            content: `Suggest ingredients for: ${mealName}`
-          }
-        ],
-        max_tokens: 200,
-      }),
+  model: "gpt-4.1-nano",        // ← was "gpt-4o-mini"
+  messages: [
+    {
+      role: "system",
+content: `You are a shopping list assistant. When given a meal name, return the ingredients someone would need to BUY at the supermarket.
+Rules:
+- Never include salt, pepper, water, or oil — things everyone has at home
+- Butter is fine to include
+- If the dish has a main protein variant (like fish vs chicken), list BOTH as separate ingredients so the user can choose — but only for the main protein, not for minor ingredients
+- Never write "chicken or fish" as one item — always split into separate items
+- Each ingredient is one specific thing
+- Return ONLY a JSON array of strings, nothing else
+Respond in ${languageName}.`
+    },
+    {
+      role: "user",
+      content: `Suggest ingredients for: ${mealName}`
+    }
+  ],
+  max_tokens: 300,              // ← was 200, gives room for longer dishes
+  temperature: 0.1,            // ← add this line, it wasn't there before
+}),
     });
 
     if (!response.ok) {

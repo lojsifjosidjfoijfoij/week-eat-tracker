@@ -14,6 +14,8 @@
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		CF4DE4A72F9E56EC00677743 /* SharedStoragePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF4DE4A62F9E56EC00677743 /* SharedStoragePlugin.swift */; };
+		CF4DE4A82F9E56EC00677743 /* SharedStoragePlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = CF4DE4A52F9E56EC00677743 /* SharedStoragePlugin.m */; };
 		CF6E7BD02F7A6EFB00A2AACA /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CF6E7BCF2F7A6EFB00A2AACA /* WidgetKit.framework */; };
 		CF6E7BD22F7A6EFB00A2AACA /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CF6E7BD12F7A6EFB00A2AACA /* SwiftUI.framework */; };
 		CF6E7BE32F7A6EFD00A2AACA /* WeekplateWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CF6E7BCD2F7A6EFB00A2AACA /* WeekplateWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -55,6 +57,8 @@
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		CF4DE4A52F9E56EC00677743 /* SharedStoragePlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SharedStoragePlugin.m; sourceTree = "<group>"; };
+		CF4DE4A62F9E56EC00677743 /* SharedStoragePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStoragePlugin.swift; sourceTree = "<group>"; };
 		CF6E7BCD2F7A6EFB00A2AACA /* WeekplateWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WeekplateWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		CF6E7BCF2F7A6EFB00A2AACA /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		CF6E7BD12F7A6EFB00A2AACA /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -120,6 +124,8 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				CF4DE4A52F9E56EC00677743 /* SharedStoragePlugin.m */,
+				CF4DE4A62F9E56EC00677743 /* SharedStoragePlugin.swift */,
 				CF6E7BE92F7A6FBB00A2AACA /* App.entitlements */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
@@ -184,8 +190,6 @@
 				CF6E7BD32F7A6EFB00A2AACA /* WeekplateWidget */,
 			);
 			name = WeekplateWidgetExtension;
-			packageProductDependencies = (
-			);
 			productName = WeekplateWidgetExtension;
 			productReference = CF6E7BCD2F7A6EFB00A2AACA /* WeekplateWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -259,6 +263,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CF4DE4A72F9E56EC00677743 /* SharedStoragePlugin.swift in Sources */,
+				CF4DE4A82F9E56EC00677743 /* SharedStoragePlugin.m in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -420,6 +426,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5N7XG28ZZY;
 				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -447,6 +454,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5N7XG28ZZY;
 				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -473,6 +481,7 @@
 				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_ENTITLEMENTS = WeekplateWidget/WeekplateWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5N7XG28ZZY;
@@ -516,6 +525,8 @@
 				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_ENTITLEMENTS = WeekplateWidget/WeekplateWidget.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=*]" = WeekplateWidget/WeekplateWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5N7XG28ZZY;

@@ -5,16 +5,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { FamilyProvider } from "@/contexts/FamilyContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { PremiumProvider, usePremium } from "@/contexts/PremiumContext";
 import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
+import Paywall from "@/components/Paywall";
 
 const queryClient = new QueryClient();
 
 const AppRoutes = () => {
   const { user, loading } = useAuth();
+  const { showPaywall, closePaywall } = usePremium();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
@@ -31,28 +34,30 @@ const AppRoutes = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <p className="text-2xl font-bold">Dinerr</p>
-          <p className="text-muted-foreground text-sm animate-pulse">Loading...</p>
+      <div style={{ minHeight: "100dvh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", fontStyle: "italic", color: "var(--ink)" }}>dinrr</p>
+          <p style={{ fontSize: "0.875rem", color: "var(--ink-3)", marginTop: "8px" }}>Loading...</p>
         </div>
       </div>
     );
   }
 
   if (!user) return <Login />;
-
   if (showOnboarding) return <Onboarding onDone={handleOnboardingDone} />;
 
   return (
-    <FamilyProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </FamilyProvider>
+    <PremiumProvider userEmail={user.email}>
+      <FamilyProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+        {showPaywall && <Paywall onClose={closePaywall} />}
+      </FamilyProvider>
+    </PremiumProvider>
   );
 };
 
