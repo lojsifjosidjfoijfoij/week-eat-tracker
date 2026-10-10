@@ -2,19 +2,29 @@
 
 Hvad der blev lavet, og hvad der skal gøres for at få det i luften. (Koden ligger i ~/week-eat-tracker; backup af den gamle version: `_backup/dinrr-before-overhaul-2026-10-10.zip`.)
 
-## Gør dette i rækkefølge
+## Allerede gjort (10. okt. 2026)
 
-1. **Ryd gamle filer op** (Terminal, én linje):
-   `cd ~/week-eat-tracker && rm -rf src/components/ui src/hooks src/integrations src/components/IngredientItem.tsx src/components/LanguageSelector.tsx src/pages/NotFound.tsx src/lib/queryClient.ts src/lib/utils.ts src/lib/translations.ts src/App.css tailwind.config.ts components.json bun.lockb public/placeholder.svg`
-2. **Database**: Supabase → SQL Editor → indsæt hele `supabase/migrations/20261010120000_security_overhaul.sql` → Run. Kør den FØR du installerer den nye app.
-3. **Giv dig selv dinrr+ til test** (SQL Editor, skift e-mail):
-   `insert into public.entitlements (user_id, manual_grant) select id, true from auth.users where email = 'DIN@EMAIL' on conflict (user_id) do update set manual_grant = true;`
-4. **RevenueCat secret key**: RevenueCat → Project settings → API keys → ny *secret* key (V1). Så i Terminal:
-   `cd ~/week-eat-tracker && supabase secrets set REVENUECAT_SECRET_KEY=sk_DIN_NØGLE REVENUECAT_WEBHOOK_SECRET=FINDPÅENLANGTILFÆLDIGTEKST`
-5. **Deploy edge functions**: `cd ~/week-eat-tracker && supabase functions deploy`
-6. **Webhook**: RevenueCat → Integrations → Webhooks → URL `https://exfsipwxedgvlhsmfrub.supabase.co/functions/v1/revenuecat-webhook`, Authorization header = samme tekst som REVENUECAT_WEBHOOK_SECRET.
-7. **Byg appen**: `cd ~/week-eat-tracker && npm install && npm run ios && npx cap open ios` → i Xcode: hæv Build-nummeret → Product › Archive → TestFlight. (Klager Xcode over pakker: File › Packages › Reset Package Caches.)
-8. **Gem til GitHub**: `cd ~/week-eat-tracker && git add -A && git commit -m "Overhaul: sikkerhed, premium, live-sync, oversættelser" && git push --force`
+- Database-migrationen er kørt i Supabase (policies, RPC'er, realtime, natlig oprydning kl. 03:17 af data ældre end 5 uger).
+- Louis har dinrr+ via `manual_grant` til test.
+- Alle 4 edge functions er deployet (suggest-ingredients, sync-premium, revenuecat-webhook, delete-account). `OPENAI_API_KEY` findes.
+- Supabase Auth: Site URL og Redirect URL `dinrr://login-callback` er sat, e-mailbekræftelse er slået til.
+- Koden ligger på GitHub `main` og på din Mac i ~/week-eat-tracker.
+
+## Det du selv skal gøre (i rækkefølge)
+
+1. **Terminal på Mac'en** — ryd op, synk git, byg:
+   ```
+   cd ~/week-eat-tracker
+   rm -rf src/components/ui src/hooks src/integrations src/components/IngredientItem.tsx src/components/LanguageSelector.tsx src/pages/NotFound.tsx src/lib/queryClient.ts src/lib/utils.ts src/lib/translations.ts src/App.css tailwind.config.ts components.json bun.lockb public/placeholder.svg
+   git fetch origin && git reset origin/main
+   npm install && npm run ios && npx cap open ios
+   ```
+   `git reset origin/main` beholder alle dine filer og sætter bare din lokale git til at matche GitHub. Brug fremover `git push` uden `--force`.
+2. **RevenueCat secret key**: RevenueCat → Project settings → API keys → ny *secret* key (V1, starter med `sk_`). Supabase → Edge Functions → Secrets → Name `REVENUECAT_SECRET_KEY`, Value = nøglen → Save.
+3. **Webhook-hemmelighed**: lav en lang tilfældig tekst (Terminal: `openssl rand -hex 32`). Supabase → Edge Functions → Secrets → Name `REVENUECAT_WEBHOOK_SECRET`, Value = teksten → Save.
+4. **Webhook i RevenueCat**: Integrations → Webhooks → URL `https://exfsipwxedgvlhsmfrub.supabase.co/functions/v1/revenuecat-webhook`, Authorization header = samme tekst som i trin 3.
+5. **Supabase Auth**: Authentication → Sign In / Providers → Email → *Minimum password length* = **8** → Save (appen kræver allerede 8).
+6. **Xcode**: hæv Build-nummeret → Product › Archive → TestFlight. (Klager Xcode over pakker: File › Packages › Reset Package Caches.)
 
 ## dinrr+ køb — tjekliste (det kan ikke fixes i koden)
 
@@ -28,7 +38,7 @@ Hvad der blev lavet, og hvad der skal gøres for at få det i luften. (Koden lig
 ## Andet at sætte i dashboards
 
 - App Store Connect privacy labels: tilføj **Name, User ID, Other User Content** (matcher PrivacyInfo.xcprivacy).
-- Supabase Auth: minimum 8 tegn i adgangskode, slå "leaked password protection" til, Redirect URL `dinrr://login-callback`, tjek "Reset password"-mailskabelonen.
+- Supabase Auth: "leaked password protection" kræver Pro-planen — slå til hvis I opgraderer. Tjek at "Reset password"-mailskabelonen ser rigtig ud.
 
 ## Hvad der blev ændret
 
