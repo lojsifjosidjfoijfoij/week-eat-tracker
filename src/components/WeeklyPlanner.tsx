@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { RotateCcw, ShoppingCart } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { RotateCcw, ShoppingCart, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFamily } from "@/contexts/FamilyContext";
@@ -27,6 +27,21 @@ const EMPTY_WEEK = (days: string[]): WeekData =>
     return acc;
   }, {} as WeekData);
 
+const loadExtras = (): Ingredient[] => {
+  try {
+    const stored = localStorage.getItem("dinrr_extras");
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveExtras = (extras: Ingredient[]) => {
+  localStorage.setItem("dinrr_extras", JSON.stringify(extras));
+};
+
+const SWIPE_THRESHOLD = 64;
+
 const WeeklyPlanner = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -35,10 +50,16 @@ const WeeklyPlanner = () => {
   const DAYS = [t.monday, t.tuesday, t.wednesday, t.thursday, t.friday, t.saturday, t.sunday];
 
   const [weekData, setWeekData] = useState<WeekData>(EMPTY_WEEK(DAYS));
+  const [extras, setExtras] = useState<Ingredient[]>(loadExtras);
   const [showShoppingList, setShowShoppingList] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resetKey, setResetKey] = useState(0);
+
+  // Pull-to-refresh state
+  const swipeStartY = useRef<number | null>(null);
+  const [swipeDistance, setSwipeDistance] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (familyId) {
@@ -53,6 +74,10 @@ const WeeklyPlanner = () => {
     if (!familyId) localStorage.setItem("mealWeekPlanner", JSON.stringify(weekData));
     saveMealToWidget(weekData);
   }, [weekData, familyId]);
+
+  useEffect(() => {
+    saveExtras(extras);
+  }, [extras]);
 
   const loadFromSupabase = async () => {
     if (!familyId) return;
@@ -71,6 +96,43 @@ const WeeklyPlanner = () => {
     });
     setWeekData(newData);
     setLoading(false);
+  };
+
+  // ── Pull-down-from-top to refresh (Instagram-style) ─────────
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    if (familyId && scrollTop <= 0) {
+      swipeStartY.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (swipeStartY.current === null) return;
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop > 0) {
+      swipeStartY.current = null;
+      setSwipeDistance(0);
+      return;
+    }
+    // Positive distance = pulling downward (Y increasing)
+    const delta = e.touches[0].clientY - swipeStartY.current;
+    if (delta > 0) {
+      setSwipeDistance(Math.min(delta, SWIPE_THRESHOLD * 1.5));
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (swipeDistance >= SWIPE_THRESHOLD) {
+      // Detach indicator from finger — switch to spinning wheel
+      setSwipeDistance(0);
+      swipeStartY.current = null;
+      setRefreshing(true);
+      await loadFromSupabase();
+      setRefreshing(false);
+    } else {
+      swipeStartY.current = null;
+      setSwipeDistance(0);
+    }
   };
 
   const handleMealChange = async (dayIndex: number, meal: string) => {
@@ -127,6 +189,22 @@ const WeeklyPlanner = () => {
     }
   };
 
+  // ── Extras handlers ──────────────────────────────────
+  const handleAddExtra = (name: string) => {
+    const id = `extra-${Date.now()}`;
+    setExtras((prev) => [...prev, { id, name, checked: false }]);
+  };
+
+  const handleToggleExtra = (id: string) => {
+    setExtras((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, checked: !e.checked } : e))
+    );
+  };
+
+  const handleDeleteExtra = (id: string) => {
+    setExtras((prev) => prev.filter((e) => e.id !== id));
+  };
+
   const handleResetWeek = async () => {
     setShowResetConfirm(false);
     setResetKey((prev) => prev + 1);
@@ -137,6 +215,8 @@ const WeeklyPlanner = () => {
     } else {
       localStorage.removeItem("mealWeekPlanner");
     }
+    // Extras are intentionally NOT cleared on week reset —
+    // staples like toilet paper carry over week to week.
   };
 
   const getAllIngredients = () => {
@@ -148,10 +228,37 @@ const WeeklyPlanner = () => {
   };
 
   const allIngredients = getAllIngredients();
-  const uncheckedCount = allIngredients.filter((i) => !i.checked).length;
+  const uncheckedCount =
+    allIngredients.filter((i) => !i.checked).length +
+    extras.filter((e) => !e.checked).length;
 
   return (
-    <div>
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull-to-refresh indicator — tracks finger while pulling, then spins freely */}
+      {(swipeDistance > 0 || refreshing) && (
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: refreshing ? "40px" : `${Math.min(swipeDistance * 0.5, 40)}px`,
+          opacity: refreshing ? 1 : Math.min(swipeDistance / SWIPE_THRESHOLD, 1),
+          overflow: "hidden",
+        }}>
+          <RefreshCw
+            size={18}
+            style={{
+              color: "var(--ink-3)",
+              animation: refreshing ? "spin 0.7s linear infinite" : undefined,
+              transform: refreshing ? undefined : `rotate(${swipeDistance * 3}deg)`,
+            }}
+          />
+        </div>
+      )}
+
       <div className="action-bar">
         <button className="btn-shopping" onClick={() => setShowShoppingList(true)}>
           <ShoppingCart size={16} strokeWidth={2} />
@@ -166,7 +273,7 @@ const WeeklyPlanner = () => {
         </button>
       </div>
 
-      {loading && <p className="sync-note">Syncing with family...</p>}
+      {loading && <p className="sync-note">{t.syncingWithFamily}</p>}
 
       <div className="week-grid">
         {DAYS.map((day, index) => (
@@ -191,19 +298,23 @@ const WeeklyPlanner = () => {
       {showShoppingList && (
         <ShoppingList
           ingredients={allIngredients}
+          extras={extras}
           onClose={() => setShowShoppingList(false)}
           onToggle={handleToggleIngredient}
+          onAddExtra={handleAddExtra}
+          onToggleExtra={handleToggleExtra}
+          onDeleteExtra={handleDeleteExtra}
         />
       )}
 
       {showResetConfirm && (
         <div className="alert-overlay" onClick={() => setShowResetConfirm(false)}>
           <div className="alert-box" onClick={(e) => e.stopPropagation()}>
-            <h3>Reset the week?</h3>
-            <p>This will clear all meals and ingredients. This cannot be undone.</p>
+            <h3>{t.resetWeek}</h3>
+            <p>{t.confirmReset}</p>
             <div className="alert-actions">
-              <button className="btn-cancel" onClick={() => setShowResetConfirm(false)}>Cancel</button>
-              <button className="btn-destructive" onClick={handleResetWeek}>Reset</button>
+              <button className="btn-cancel" onClick={() => setShowResetConfirm(false)}>{t.cancel}</button>
+              <button className="btn-destructive" onClick={handleResetWeek}>{t.resetWeek}</button>
             </div>
           </div>
         </div>

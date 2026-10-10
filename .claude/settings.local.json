@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(xargs cat)",
+      "Bash(supabase functions *)",
+      "Bash(git -C /Users/louiskjaer/week-eat-tracker log --oneline --all)",
+      "Bash(git -C /Users/louiskjaer/week-eat-tracker ls-files .env)",
+      "Bash(git -C /Users/louiskjaer/week-eat-tracker grep -n \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\" -- \"*.ts\" \"*.tsx\")",
+      "Bash(git -C /Users/louiskjaer/week-eat-tracker show 44e6be8 --stat)",
+      "Bash(npm run *)"
+    ]
+  }
+}

@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Check, Sparkles, Users, ShoppingCart, Zap } from "lucide-react";
-import { usePremium, PRODUCT_IDS } from "@/contexts/PremiumContext";
+import { Purchases } from "@revenuecat/purchases-capacitor";
+import { usePremium } from "@/contexts/PremiumContext";
 import { useToast } from "@/hooks/use-toast";
+import { safeGetOfferings } from "@/lib/revenuecat";
 
 const FEATURES_FREE = [
   { icon: <ShoppingCart size={16} />, text: "Weekly meal planning" },
@@ -20,26 +22,66 @@ type Plan = "monthly" | "yearly";
 const Paywall = ({ onClose }: { onClose: () => void }) => {
   const [selectedPlan, setSelectedPlan] = useState<Plan>("yearly");
   const [loading, setLoading] = useState(false);
+  const [packages, setPackages] = useState<{ annual: any; monthly: any } | null>(null);
   const { restorePurchases } = usePremium();
   const { toast } = useToast();
+
+  useEffect(() => {
+    safeGetOfferings()
+      .then((offerings) => {
+        const current = offerings.current;
+        if (current) setPackages({ annual: current.annual, monthly: current.monthly });
+      })
+      .catch((e) => console.log("Failed to fetch offerings:", e));
+  }, []);
+
+  const yearlyPkg = packages?.annual;
+  const monthlyPkg = packages?.monthly;
+  const yearlyPrice = yearlyPkg?.product?.priceString ?? "€29.99";
+  const monthlyPrice = monthlyPkg?.product?.priceString ?? "€3.99";
+  const yearlyPerMonth = yearlyPkg?.product?.price
+    ? (() => {
+        try {
+          return (
+            new Intl.NumberFormat(undefined, {
+              style: "currency",
+              currency: yearlyPkg.product.currencyCode,
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(yearlyPkg.product.price / 12) + " / month"
+          );
+        } catch {
+          return `${(yearlyPkg.product.price / 12).toFixed(2)} / month`;
+        }
+      })()
+    : "€2.50 / month";
 
   const handleSubscribe = async () => {
     setLoading(true);
     try {
-      // TODO: When Apple Developer account is ready, replace with:
-      // const { Purchases } = await import("@revenuecat/purchases-capacitor");
-      // const offerings = await Purchases.getOfferings();
-      // const pkg = selectedPlan === "yearly"
-      //   ? offerings.current?.annual
-      //   : offerings.current?.monthly;
-      // if (pkg) await Purchases.purchasePackage({ aPackage: pkg });
+      const offerings = await safeGetOfferings();
+      const current = offerings.current;
 
-      toast({
-        title: "Coming soon",
-        description: "Subscriptions will be available when the app launches on the App Store.",
-      });
-    } catch (e) {
-      toast({ title: "Purchase failed", variant: "destructive" });
+      if (!current) {
+        toast({ title: "No offerings", description: "Current offering is null", variant: "destructive" });
+        return;
+      }
+
+      const pkg = selectedPlan === "yearly" ? current.annual : current.monthly;
+
+      if (!pkg) {
+        toast({ title: "No package", description: `${selectedPlan} package not found`, variant: "destructive" });
+        return;
+      }
+
+      await Purchases.purchasePackage({ aPackage: pkg });
+      await restorePurchases(); // refresh isPremium state immediately
+      toast({ title: "Welcome to dinrr+!", description: "Your subscription is now active." });
+      onClose();
+    } catch (e: any) {
+      console.log("Purchase error:", JSON.stringify(e));
+      if (e?.userCancelled) return;
+      toast({ title: "Purchase failed", description: e?.message || JSON.stringify(e), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -95,15 +137,15 @@ const Paywall = ({ onClose }: { onClose: () => void }) => {
         >
           <div className="paywall__plan-badge">Best value</div>
           <p className="paywall__plan-name">Yearly</p>
-          <p className="paywall__plan-price">€29.99<span>/yr</span></p>
-          <p className="paywall__plan-sub">€2.50 / month</p>
+          <p className="paywall__plan-price">{yearlyPrice}<span>/yr</span></p>
+          <p className="paywall__plan-sub">{yearlyPerMonth}</p>
         </button>
         <button
           className={`paywall__plan${selectedPlan === "monthly" ? " is-selected" : ""}`}
           onClick={() => setSelectedPlan("monthly")}
         >
           <p className="paywall__plan-name">Monthly</p>
-          <p className="paywall__plan-price">€3.99<span>/mo</span></p>
+          <p className="paywall__plan-price">{monthlyPrice}<span>/mo</span></p>
           <p className="paywall__plan-sub">Cancel anytime</p>
         </button>
       </div>
@@ -122,6 +164,25 @@ const Paywall = ({ onClose }: { onClose: () => void }) => {
         </button>
         <p className="paywall__legal">
           Subscription renews automatically. Cancel anytime in Settings.
+        </p>
+        <p className="paywall__legal" style={{ marginTop: "6px" }}>
+          <a
+            href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: "var(--ink-3)", textDecoration: "underline" }}
+          >
+            Terms of Use
+          </a>
+          {" · "}
+          <a
+            href="https://lojsifjosidjfoijfoij.github.io/dinrr-site/privacy.html"
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: "var(--ink-3)", textDecoration: "underline" }}
+          >
+            Privacy Policy
+          </a>
         </p>
       </div>
 

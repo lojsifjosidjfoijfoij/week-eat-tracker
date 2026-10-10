@@ -12,7 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    // Verify user is authenticated
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -21,13 +20,13 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
+    // Verify the JWT and get the user
+    const userClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       { global: { headers: { Authorization: authHeader } } }
     );
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
@@ -36,18 +35,31 @@ serve(async (req) => {
     }
 
     const { mealName, language = "en" } = await req.json();
-    
-    if (!mealName || mealName.trim() === "") {
+
+    if (!mealName || typeof mealName !== "string" || mealName.trim() === "") {
       return new Response(
         JSON.stringify({ error: "Meal name is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Rate limit: max 20 suggestions per user per day
+    // Clamp input to prevent prompt injection via very long strings
+    const safeMealName = mealName.trim().slice(0, 100);
+
+    // Rate limit: max 20 AI calls per user per day, stored in the ai_usage table
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
     const today = new Date().toISOString().split("T")[0];
-    const rateLimitKey = `rate_limit_${user.id}_${today}`;
-    const currentCount = parseInt(Deno.env.get(rateLimitKey) ?? "0");
+    const { data: usageRow } = await adminClient
+      .from("ai_usage")
+      .select("count")
+      .eq("user_id", user.id)
+      .eq("usage_date", today)
+      .maybeSingle();
+
+    const currentCount = usageRow?.count ?? 0;
     if (currentCount >= 20) {
       return new Response(
         JSON.stringify({ error: "Daily limit reached. Try again tomorrow." }),
@@ -55,12 +67,23 @@ serve(async (req) => {
       );
     }
 
+    // Increment before calling OpenAI so a failed request still counts
+    await adminClient.from("ai_usage").upsert({
+      user_id: user.id,
+      usage_date: today,
+      count: currentCount + 1,
+    });
+
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
       throw new Error("OPENAI_API_KEY is not configured");
     }
 
-    const languageName = language === "da" ? "Danish" : language === "de" ? "German" : language === "fr" ? "French" : language === "es" ? "Spanish" : "English";
+    const languageName =
+      language === "da" ? "Danish" :
+      language === "de" ? "German" :
+      language === "fr" ? "French" :
+      language === "es" ? "Spanish" : "English";
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -69,11 +92,11 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-  model: "gpt-4.1-nano",        // ← was "gpt-4o-mini"
-  messages: [
-    {
-      role: "system",
-content: `You are a shopping list assistant. When given a meal name, return the ingredients someone would need to BUY at the supermarket.
+        model: "gpt-4.1-nano",
+        messages: [
+          {
+            role: "system",
+            content: `You are a shopping list assistant. When given a meal name, return the ingredients someone would need to BUY at the supermarket.
 Rules:
 - Never include salt, pepper, water, or oil — things everyone has at home
 - Butter is fine to include
@@ -81,16 +104,16 @@ Rules:
 - Never write "chicken or fish" as one item — always split into separate items
 - Each ingredient is one specific thing
 - Return ONLY a JSON array of strings, nothing else
-Respond in ${languageName}.`
-    },
-    {
-      role: "user",
-      content: `Suggest ingredients for: ${mealName}`
-    }
-  ],
-  max_tokens: 300,              // ← was 200, gives room for longer dishes
-  temperature: 0.1,            // ← add this line, it wasn't there before
-}),
+Respond in ${languageName}.`,
+          },
+          {
+            role: "user",
+            content: `Suggest ingredients for: ${safeMealName}`,
+          },
+        ],
+        max_tokens: 300,
+        temperature: 0.1,
+      }),
     });
 
     if (!response.ok) {
@@ -104,18 +127,21 @@ Respond in ${languageName}.`
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
-    
     if (!content) throw new Error("No response from AI");
 
     let ingredients: string[];
     try {
-      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleanContent = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       ingredients = JSON.parse(cleanContent);
-      if (!Array.isArray(ingredients) || !ingredients.every(item => typeof item === 'string')) {
+      if (!Array.isArray(ingredients) || !ingredients.every((item) => typeof item === "string")) {
         throw new Error("Invalid response format");
       }
     } catch {
-      ingredients = content.split(/[,\n]/).map((item: string) => item.trim()).filter((item: string) => item.length > 0).slice(0, 8);
+      ingredients = content
+        .split(/[,\n]/)
+        .map((item: string) => item.trim())
+        .filter((item: string) => item.length > 0)
+        .slice(0, 8);
     }
 
     return new Response(

@@ -1,9 +1,8 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { FamilyProvider } from "@/contexts/FamilyContext";
+import { FamilyProvider, useFamily } from "@/contexts/FamilyContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PremiumProvider, usePremium } from "@/contexts/PremiumContext";
 import { useState, useEffect } from "react";
@@ -12,8 +11,6 @@ import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import Paywall from "@/components/Paywall";
-
-const queryClient = new QueryClient();
 
 const AppRoutes = () => {
   const { user, loading } = useAuth();
@@ -47,30 +44,49 @@ const AppRoutes = () => {
   if (showOnboarding) return <Onboarding onDone={handleOnboardingDone} />;
 
   return (
-    <PremiumProvider userEmail={user.email}>
-      <FamilyProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-        {showPaywall && <Paywall onClose={closePaywall} />}
-      </FamilyProvider>
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+      {showPaywall && <Paywall onClose={closePaywall} />}
+    </>
+  );
+};
+
+// Reads familyId from FamilyContext (already mounted) and forwards it to PremiumProvider
+// so that family membership is treated as a premium entitlement.
+const PremiumWithFamily = ({ userEmail, children }: { userEmail?: string; children: React.ReactNode }) => {
+  const { familyId } = useFamily();
+  return (
+    <PremiumProvider userEmail={userEmail} familyId={familyId ?? undefined}>
+      {children}
     </PremiumProvider>
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
+// FamilyProvider sits above PremiumProvider so familyId can feed into premium state
+const AuthenticatedApp = () => {
+  const { user } = useAuth();
+  return (
+    <FamilyProvider>
+      <PremiumWithFamily userEmail={user?.email}>
         <AppRoutes />
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+      </PremiumWithFamily>
+    </FamilyProvider>
+  );
+};
+
+const App = () => (
+  <TooltipProvider>
+    <Toaster />
+    <Sonner />
+    <AuthProvider>
+      <AuthenticatedApp />
+    </AuthProvider>
+  </TooltipProvider>
 );
 
 export default App;

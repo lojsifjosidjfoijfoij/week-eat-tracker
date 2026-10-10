@@ -1,9 +1,5 @@
 import { useState } from "react";
-import { UtensilsCrossed } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -11,100 +7,129 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const { signIn, signUp } = useAuth();
-  const { toast } = useToast();
 
   const handleSubmit = async () => {
-  if (!email || !password) {
-    toast({ title: "Missing fields", description: "Please enter your email and password.", variant: "destructive" });
-    return;
-  }
-  setLoading(true);
-
-  if (isSignUp) {
-    if (password.length < 6) {
-      toast({ title: "Password too short", description: "Password must be at least 6 characters.", variant: "destructive" });
-      setLoading(false);
+    setError("");
+    setSuccess("");
+    if (!email || !password) {
+      setError("Please enter your email and password.");
       return;
     }
-    const { error } = await signUp(email, password, fullName);
-    if (error) {
-      if (error.message.includes("already registered")) {
-        toast({ title: "Email already in use", description: "Try signing in instead.", variant: "destructive" });
+    setLoading(true);
+    if (isSignUp) {
+      if (password.length < 6) {
+        setError("Password must be at least 6 characters.");
+        setLoading(false);
+        return;
+      }
+      const { error } = await signUp(email, password, fullName);
+      if (error) {
+        if (error.message.includes("already registered")) {
+          setError("Email already in use. Try signing in instead.");
+        } else {
+          setError(error.message);
+        }
       } else {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
+        setSuccess("Account created! Please check your email to confirm your account.");
       }
     } else {
-      toast({ title: "Account created!", description: "Please check your email to confirm your account." });
-    }
-  } else {
-    const { error } = await signIn(email, password);
-    if (error) {
-      if (error.message.includes("Invalid login")) {
-        toast({ title: "Wrong email or password", description: "Please check your details and try again.", variant: "destructive" });
-      } else if (error.message.includes("Email not confirmed")) {
-        toast({ title: "Email not confirmed", description: "Please check your inbox and confirm your email first.", variant: "destructive" });
-      } else {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
+      const { error } = await signIn(email, password);
+      if (error) {
+        if (error.message.includes("Invalid login")) {
+          setError("Wrong email or password. Please check your details and try again.");
+        } else if (error.message.includes("Email not confirmed")) {
+          setError("Email not confirmed. Please check your inbox first.");
+        } else {
+          setError(error.message);
+        }
       }
     }
-  }
-  setLoading(false);
-};
+    setLoading(false);
+  };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <UtensilsCrossed className="h-8 w-8" />
-          </div>
-          <h1 className="text-3xl font-bold">Dinerr</h1>
-          <p className="text-muted-foreground text-sm">
+    <div style={{
+      minHeight: "100dvh",
+      background: "var(--bg)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "24px",
+      paddingTop: "calc(env(safe-area-inset-top, 50px) + 24px)",
+      paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
+    }}>
+      <div style={{ width: "100%", maxWidth: "360px" }}>
+
+        <div style={{ textAlign: "center", marginBottom: "40px" }}>
+          <h1 style={{
+            fontFamily: "var(--font-serif)",
+            fontStyle: "italic",
+            fontSize: "2.5rem",
+            color: "var(--ink)",
+            letterSpacing: "-0.02em",
+            marginBottom: "8px",
+          }}>dinrr</h1>
+          <p style={{ fontSize: "0.9rem", color: "var(--ink-3)", fontWeight: 300 }}>
             {isSignUp ? "Create your account" : "Welcome back"}
           </p>
         </div>
 
-        <div className="space-y-3">
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           {isSignUp && (
-            <Input
+            <input
+              className="settings-input"
               placeholder="Full name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
             />
           )}
-          <Input
+          <input
+            className="settings-input"
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSubmit()}
           />
-          <Input
+          <input
+            className="settings-input"
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSubmit()}
           />
-          <Button
-            className="w-full"
+
+          {error && (
+            <p style={{ fontSize: "0.825rem", color: "var(--red)", textAlign: "center" }}>{error}</p>
+          )}
+          {success && (
+            <p style={{ fontSize: "0.825rem", color: "var(--green)", textAlign: "center" }}>{success}</p>
+          )}
+
+          <button
+            className="settings-btn"
             onClick={handleSubmit}
             disabled={loading}
+            style={{ marginTop: "4px" }}
           >
             {loading ? "Loading..." : isSignUp ? "Create account" : "Sign in"}
-          </Button>
+          </button>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p style={{ textAlign: "center", fontSize: "0.875rem", color: "var(--ink-3)", marginTop: "24px" }}>
           {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-foreground font-medium underline underline-offset-4"
+            onClick={() => { setIsSignUp(!isSignUp); setError(""); setSuccess(""); }}
+            style={{ color: "var(--ink)", fontWeight: 600, background: "none", border: "none", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "3px" }}
           >
             {isSignUp ? "Sign in" : "Sign up"}
           </button>
         </p>
+
       </div>
     </div>
   );

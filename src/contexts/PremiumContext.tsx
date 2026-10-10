@@ -1,17 +1,19 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  useRef,
+} from "react";
+
+import { safeGetCustomerInfo, safeLogin, safeRestorePurchases } from "@/lib/revenuecat";
 
 export const PRODUCT_IDS = {
-  monthly: "dinrr_premium_monthly",
-  yearly:  "dinrr_premium_yearly",
+  monthly: "com.louis.weekmealplanner.monthly",
+  yearly: "com.louis.weekmealplanner.yearly",
 };
 
-// ─── Add tester emails here ───────────────────────────
-const TESTER_EMAILS = [
-  "louis@youremail.com",   // replace with your real email
-  // "friend@example.com", // add friends/family here
-];
-
-interface PremiumContextType {
+type PremiumContextType = {
   isPremium: boolean;
   isLoading: boolean;
   showPaywall: boolean;
@@ -20,87 +22,97 @@ interface PremiumContextType {
   restorePurchases: () => Promise<void>;
   activateTestMode: () => void;
   isTestMode: boolean;
-}
+};
 
-const PremiumContext = createContext<PremiumContextType>({
-  isPremium: false,
-  isLoading: false,
-  showPaywall: false,
-  openPaywall: () => {},
-  closePaywall: () => {},
-  restorePurchases: async () => {},
-  activateTestMode: () => {},
-  isTestMode: false,
-});
+const PremiumContext = createContext<PremiumContextType | null>(null);
 
-export const usePremium = () => useContext(PremiumContext);
+export const usePremium = () => {
+  const ctx = useContext(PremiumContext);
+  if (!ctx) throw new Error("usePremium must be used inside PremiumProvider");
+  return ctx;
+};
 
-export const PremiumProvider = ({ children, userEmail }: { children: React.ReactNode; userEmail?: string }) => {
-  const [isPremium, setIsPremium] = useState(false);
+export const PremiumProvider = ({
+  children,
+  userEmail,
+  familyId,
+}: {
+  children: React.ReactNode;
+  userEmail?: string;
+  familyId?: string;
+}) => {
+  const [rcPremium, setRcPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showPaywall, setShowPaywall] = useState(false);
   const [isTestMode, setIsTestMode] = useState(false);
 
+  const initializedForEmail = useRef<string | null>(null);
+
+  // Family members are always premium
+  const isPremium = isTestMode || rcPremium || !!familyId;
+
   useEffect(() => {
-    checkPremiumStatus();
+    if (!userEmail || initializedForEmail.current === userEmail) return;
+    initializedForEmail.current = userEmail;
+
+    const timer = setTimeout(() => {
+      initPremium(userEmail);
+    }, 1500); // gives Capacitor time to fully boot
+
+    return () => clearTimeout(timer);
   }, [userEmail]);
 
-  const checkPremiumStatus = async () => {
+  // Resolve loading immediately if familyId is already known
+  useEffect(() => {
+    if (familyId) setIsLoading(false);
+  }, [familyId]);
+
+  const initPremium = async (email: string) => {
     try {
-      // Check if tester email
-      if (userEmail && TESTER_EMAILS.includes(userEmail.toLowerCase())) {
-        setIsPremium(true);
-        setIsTestMode(true);
-        setIsLoading(false);
-        return;
+      try {
+        await safeLogin(email);
+      } catch (e) {
+        console.log("RevenueCat login failed:", e);
       }
 
-      // Check if test mode was manually activated
-      const testMode = localStorage.getItem("dinrr_test_mode");
-      if (testMode === "true") {
-        setIsPremium(true);
-        setIsTestMode(true);
-        setIsLoading(false);
-        return;
-      }
-
-      // TODO: real RevenueCat check goes here when Apple Dev account arrives
-      const stored = localStorage.getItem("dinrr_premium");
-      setIsPremium(stored === "true");
+      const { customerInfo } = await safeGetCustomerInfo();
+      const hasPremium = !!customerInfo.entitlements.active["dinerr +"];
+      setRcPremium(hasPremium);
     } catch (e) {
-      setIsPremium(false);
+      console.log("RevenueCat error:", e);
+      setRcPremium(false);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const restorePurchases = async () => {
+    try {
+      const { customerInfo } = await safeRestorePurchases();
+      const hasPremium = !!customerInfo.entitlements.active["dinerr +"];
+      setRcPremium(hasPremium);
+    } catch (e) {
+      console.log("Restore error:", e);
+    }
+  };
+
   const activateTestMode = () => {
-    localStorage.setItem("dinrr_test_mode", "true");
-    setIsPremium(true);
     setIsTestMode(true);
   };
 
-  const deactivateTestMode = () => {
-    localStorage.removeItem("dinrr_test_mode");
-    setIsPremium(false);
-    setIsTestMode(false);
-  };
-
-  const restorePurchases = async () => {
-    console.log("Restore purchases — will work once RevenueCat is configured");
-  };
-
   return (
-    <PremiumContext.Provider value={{
-      isPremium,
-      isLoading,
-      showPaywall,
-      openPaywall: () => setShowPaywall(true),
-      closePaywall: () => setShowPaywall(false),
-      restorePurchases,
-      activateTestMode,
-      isTestMode,
-    }}>
+    <PremiumContext.Provider
+      value={{
+        isPremium,
+        isLoading,
+        showPaywall,
+        openPaywall: () => setShowPaywall(true),
+        closePaywall: () => setShowPaywall(false),
+        restorePurchases,
+        activateTestMode,
+        isTestMode,
+      }}
+    >
       {children}
     </PremiumContext.Provider>
   );

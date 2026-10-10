@@ -5,6 +5,7 @@ import { usePremium } from "@/contexts/PremiumContext";
 import { useAuth } from "@/contexts/AuthContext";
 import WeeklyPlanner from "@/components/WeeklyPlanner";
 import SettingsPage from "@/pages/Settings";
+import Paywall from "@/components/Paywall";
 import { useToast } from "@/hooks/use-toast";
 
 const getWeekNumber = () => {
@@ -15,7 +16,7 @@ const getWeekNumber = () => {
 
 const Index = () => {
   const { t } = useLanguage();
-  const { isPremium, isTestMode, activateTestMode } = usePremium();
+  const { isPremium, isTestMode, activateTestMode, showPaywall, closePaywall } = usePremium();
   const { toast } = useToast();
   const [showSettings, setShowSettings] = useState(false);
   const week = getWeekNumber();
@@ -35,7 +36,7 @@ const Index = () => {
         activateTestMode();
         toast({ title: "🧪 Test mode on", description: "All premium features unlocked for testing." });
       } else {
-        toast({ title: "Already in test mode", description: "Premium features are unlocked." });
+        window.location.reload();
       }
     }
   };
@@ -59,7 +60,7 @@ const Index = () => {
                   fontWeight: 700,
                   color: "var(--green)",
                   lineHeight: 1,
-                  marginTop: "2px", // slight optical alignment with serif baseline
+                  marginTop: "2px",
                 }}>
                   +
                 </span>
@@ -84,6 +85,7 @@ const Index = () => {
       </div>
 
       {showSettings && <SettingsPage onClose={() => setShowSettings(false)} />}
+      {showPaywall && <Paywall onClose={closePaywall} />}
     </>
   );
 };

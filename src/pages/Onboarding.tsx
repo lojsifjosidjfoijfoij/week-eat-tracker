@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { UtensilsCrossed, ShoppingCart, Users, Sparkles, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const steps = [
   {
@@ -32,51 +31,92 @@ const Onboarding = ({ onDone }: { onDone: () => void }) => {
   const Icon = current.icon;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-between p-8 pb-16">
-      <div className="w-full max-w-sm flex flex-col items-center flex-1 justify-center space-y-8">
+    <div style={{
+      minHeight: "100dvh",
+      background: "var(--bg)",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "24px",
+      paddingTop: "calc(env(safe-area-inset-top, 50px) + 24px)",
+      paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)",
+    }}>
 
-        {/* Icon */}
-        <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center">
-          <Icon className="h-10 w-10 text-foreground" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "32px", width: "100%", maxWidth: "360px" }}>
+
+        <div style={{
+          width: "80px",
+          height: "80px",
+          borderRadius: "24px",
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 2px 12px rgba(26,23,20,0.08)",
+        }}>
+          <Icon size={36} color="var(--green)" strokeWidth={1.5} />
         </div>
 
-        {/* Text */}
-        <div className="text-center space-y-3">
-          <h1 className="text-2xl font-bold">{current.title}</h1>
-          <p className="text-muted-foreground leading-relaxed">{current.description}</p>
+        <div style={{ textAlign: "center" }}>
+          <h1 style={{
+            fontFamily: "var(--font-serif)",
+            fontStyle: "italic",
+            fontSize: "1.75rem",
+            color: "var(--ink)",
+            marginBottom: "12px",
+            lineHeight: 1.2,
+          }}>{current.title}</h1>
+          <p style={{
+            fontSize: "0.9375rem",
+            color: "var(--ink-2)",
+            lineHeight: 1.6,
+            fontWeight: 300,
+          }}>{current.description}</p>
         </div>
 
-        {/* Dots */}
-        <div className="flex gap-2">
+        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
           {steps.map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === step ? "w-6 bg-foreground" : "w-1.5 bg-muted-foreground/30"
-              }`}
-            />
+            <div key={i} style={{
+              height: "6px",
+              borderRadius: "3px",
+              background: i === step ? "var(--green)" : "var(--border-strong)",
+              width: i === step ? "24px" : "6px",
+              transition: "all 0.3s var(--ease)",
+            }} />
           ))}
         </div>
+
       </div>
 
-      {/* Button */}
-      <div className="w-full max-w-sm space-y-3">
-        <Button
-          className="w-full"
+      <div style={{ width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: "12px" }}>
+        <button
+          className="btn-shopping"
+          style={{ width: "100%", justifyContent: "center", borderRadius: "var(--r-pill)", padding: "16px", fontSize: "1rem" }}
           onClick={() => isLast ? onDone() : setStep(step + 1)}
         >
           {isLast ? "Get started" : "Next"}
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
+          <ChevronRight size={18} strokeWidth={2} />
+        </button>
         {!isLast && (
           <button
             onClick={onDone}
-            className="w-full text-sm text-muted-foreground text-center py-2"
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: "0.875rem",
+              color: "var(--ink-3)",
+              cursor: "pointer",
+              padding: "8px",
+              textAlign: "center",
+            }}
           >
             Skip
           </button>
         )}
       </div>
+
     </div>
   );
 };

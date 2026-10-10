@@ -4,7 +4,7 @@ import WidgetKit
 
 @objc(SharedStoragePlugin)
 public class SharedStoragePlugin: CAPPlugin {
-    private let appGroup = "group.com.Louis.weekplate"
+    private let appGroup = "group.com.louis.dinrr"
 
     @objc func set(_ call: CAPPluginCall) {
         guard let key = call.getString("key"),

@@ -1,244 +1,162 @@
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useState, useRef } from "react";
+import { X, Plus, Trash2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+interface Ingredient {
+  id: string;
+  name: string;
+  checked: boolean;
+}
 
 interface ShoppingListProps {
   ingredients: { id: string; name: string; checked: boolean; day: string; dayIndex: number }[];
+  extras: Ingredient[];
   onClose: () => void;
   onToggle: (dayIndex: number, id: string) => void;
+  onAddExtra: (name: string) => void;
+  onToggleExtra: (id: string) => void;
+  onDeleteExtra: (id: string) => void;
 }
 
-// ─── Aisle key → English fallback label ───────────────────────────────────
-// The t object is checked first; if the key doesn't exist yet it falls back.
-const AISLE_KEYS = [
-  "aisleProduceLabel",
-  "aisleBakeryLabel",
+type AisleKey =
+  | "aisleFreshLabel"
+  | "aisleMeatFishLabel"
+  | "aisleDairyLabel"
+  | "aislePantryLabel"
+  | "aisleDrinksSnacksLabel"
+  | "aisleHouseholdLabel"
+  | "aisleOtherLabel";
+
+const AISLE_ORDER: AisleKey[] = [
+  "aisleFreshLabel",
   "aisleMeatFishLabel",
-  "aisleDeliCheeseLabel",
-  "aisleDairyEggsLabel",
-  "aisleFrozenLabel",
-  "aislePastaRiceLabel",
-  "aisleTinsJarsLabel",
-  "aisleCondimentsLabel",
-  "aisleOilsBakingLabel",
-  "aisleSnacksDrinksLabel",
+  "aisleDairyLabel",
+  "aislePantryLabel",
+  "aisleDrinksSnacksLabel",
   "aisleHouseholdLabel",
   "aisleOtherLabel",
-] as const;
+];
 
-const AISLE_FALLBACKS: Record<typeof AISLE_KEYS[number], string> = {
-  aisleProduceLabel:     "Fruit & Veg",
-  aisleBakeryLabel:      "Bakery",
-  aisleMeatFishLabel:    "Meat & Fish",
-  aisleDeliCheeseLabel:  "Deli & Cheese",
-  aisleDairyEggsLabel:   "Dairy & Eggs",
-  aisleFrozenLabel:      "Frozen",
-  aislePastaRiceLabel:   "Pasta, Rice & Grains",
-  aisleTinsJarsLabel:    "Tins & Jars",
-  aisleCondimentsLabel:  "Condiments & Sauces",
-  aisleOilsBakingLabel:  "Oils & Baking",
-  aisleSnacksDrinksLabel:"Snacks & Drinks",
-  aisleHouseholdLabel:   "Household",
-  aisleOtherLabel:       "Other",
-};
-
-// ─── Supermarket aisle order ───────────────────────────────────────────────
-const AISLES: { key: typeof AISLE_KEYS[number]; keywords: string[] }[] = [
+const AISLES: { key: AisleKey; keywords: string[] }[] = [
   {
-    key: "aisleProduceLabel",
+    key: "aisleFreshLabel",
     keywords: [
-      "apple","apples","banana","bananas","orange","oranges","lemon","lemons","lime","limes",
-      "grape","grapes","strawberr","blueberr","raspberr","blackberr","mango","peach","pear",
-      "plum","cherry","cherries","watermelon","melon","pineapple","kiwi","avocado","avocados",
-      "tomato","tomatoes","tomat","lettuce","spinach","kale","arugula","rocket","cabbage",
-      "broccoli","cauliflower","carrot","carrots","celery","cucumber","courgette","zucchini",
-      "pepper","peppers","capsicum","onion","onions","garlic","leek","leeks","spring onion",
-      "shallot","radish","beetroot","beet","parsnip","turnip","potato","potatoes","sweet potato",
-      "mushroom","mushrooms","corn","asparagus","artichoke","fennel","ginger","chilli","chili",
-      "herb","herbs","basil","parsley","coriander","cilantro","thyme","rosemary","mint","dill",
-      "sage","oregano","chive","chives","salad","greens","vegetable","vegetables","fruit","fruits",
-      "pak choi","bok choy","bean sprout","edamame","pea","peas","green bean","green beans",
-      "aubergine","eggplant","plantain","dragonfruit","passionfruit","papaya",
-      // Danish
-      "æble","æbler","banan","bananer","appelsin","citrон","lime","drue","druer","jordbær",
-      "blåbær","hindbær","mango","fersken","pære","blomme","kirsebær","vandmelon","ananas",
-      "kiwi","avocado","tomat","tomater","salat","spinat","grønkål","kål","broccoli",
-      "blomkål","gulerod","gulerødder","selleri","agurk","courgette","peberfrugt","løg",
-      "hvidløg","porre","porrer","radise","rødbede","pastinak","kartoffel","kartofler",
-      "søde kartofler","svamp","champignon","majs","asparges","ingefær","chili","krydderurter",
-      "basilikum","persille","koriander","timian","rosmarin","mynte","dild","salvie","oregano",
-      "purløg","ærter","bønner","aubergine",
-    ],
-  },
-  {
-    key: "aisleBakeryLabel",
-    keywords: [
-      "bread","loaf","baguette","roll","rolls","bun","buns","sourdough","rye","wholegrain",
-      "pita","pitta","naan","tortilla","wrap","wraps","bagel","bagels","croissant","muffin",
-      "crumpet","crumpets","flatbread","ciabatta","focaccia","brioche",
-      // Danish
-      "brød","rugbrød","franskbrød","bolle","boller","surdejsbrød","fuldkornsbrød",
-      "pitabrød","tortilla","bagel","croissant","muffin","flute","ciabatta","focaccia",
+      "apple","banana","orange","lemon","lime","grape","strawberr","blueberr","mango",
+      "peach","pear","plum","cherry","watermelon","pineapple","kiwi","avocado","tomato",
+      "lettuce","spinach","kale","cabbage","broccoli","cauliflower","carrot","celery",
+      "cucumber","courgette","zucchini","pepper","onion","garlic","leek","potato",
+      "sweet potato","mushroom","corn","asparagus","ginger","chilli","chili","herb",
+      "basil","parsley","coriander","cilantro","thyme","rosemary","mint","dill","salad",
+      "vegetable","fruit","pea","green bean","aubergine","eggplant","bread","loaf",
+      "baguette","roll","bun","sourdough","bagel","croissant","pita","naan","flatbread",
+      "ciabatta","focaccia","brioche",
+      "æble","banan","appelsin","citron","drue","jordbær","blåbær","mango","fersken",
+      "pære","blomme","kirsebær","ananas","kiwi","avocado","tomat","salat","spinat",
+      "grønkål","kål","broccoli","blomkål","gulerod","selleri","agurk","courgette",
+      "peberfrugt","løg","hvidløg","porre","kartoffel","søde kartofler","svamp",
+      "champignon","majs","asparges","ingefær","chili","krydderurter","basilikum",
+      "persille","koriander","timian","rosmarin","mynte","dild","ærter","grønne bønner",
+      "aubergine","brød","rugbrød","bolle","surdejsbrød","pitabrød","ciabatta","flute",
     ],
   },
   {
     key: "aisleMeatFishLabel",
     keywords: [
-      "chicken","beef","pork","lamb","turkey","duck","veal","mince","mincemeat","steak",
-      "sausage","sausages","bacon","ham","salami","chorizo","prosciutto","pepperoni",
-      "liver","kidney","rib","ribs","chop","chops","roast","fillet","breast","thigh","wing",
-      "salmon","tuna","cod","haddock","tilapia","trout","sea bass","mackerel","sardine",
-      "shrimp","prawn","prawns","crab","lobster","mussel","mussels","clam","clams","oyster",
-      "squid","octopus","anchov","fish","seafood","meat","poultry",
-      // Danish
-      "kylling","oksekød","svinekød","lam","kalkun","and","kalv","hakket","bøf","pølse",
-      "pølser","bacon","skinke","salami","chorizo","lever","nyre","ribeye","filet","bryst",
-      "lår","vinge","laks","tun","torsk","rødspætte","ørred","havbars","makrel","sild",
-      "rejer","krabbe","hummer","musling","muslinger","østers","blæksprutte","fisk","skaldyr","kød",
+      "chicken","beef","pork","lamb","turkey","duck","mince","steak","sausage","bacon",
+      "ham","salami","chorizo","prosciutto","pepperoni","fillet","breast","thigh","wing",
+      "salmon","tuna","cod","haddock","trout","sea bass","mackerel","sardine","shrimp",
+      "prawn","crab","lobster","mussel","clam","oyster","squid","fish","seafood","meat",
+      "kylling","oksekød","svinekød","lam","kalkun","and","hakket","bøf","pølse","bacon",
+      "skinke","salami","chorizo","filet","bryst","lår","laks","tun","torsk","rødspætte",
+      "ørred","havbars","makrel","sild","rejer","krabbe","hummer","musling","fisk","kød",
     ],
   },
   {
-    key: "aisleDeliCheeseLabel",
+    key: "aisleDairyLabel",
     keywords: [
-      "cheese","cheddar","mozzarella","parmesan","brie","camembert","feta","gouda","ricotta",
-      "halloumi","gruyère","gruyere","emmental","goat cheese","cream cheese","cottage cheese",
-      "hummus","deli","cooked meat","cold cut","paté","pate","smoked salmon",
-      // Danish
-      "ost","cheddar","mozzarella","parmesan","brie","camembert","feta","gouda","ricotta",
-      "halloumi","emmental","gedeost","flødeost","hytteost","hummus","pålæg","røget laks",
+      "milk","oat milk","almond milk","soy milk","butter","cream","sour cream","yogurt",
+      "yoghurt","egg","eggs","cheese","cheddar","mozzarella","parmesan","feta","brie",
+      "gouda","ricotta","halloumi","cream cheese","cottage cheese","quark","creme fraiche",
+      "mælk","havremælk","mandelmælk","sojamælk","smør","fløde","cremefraiche",
+      "yoghurt","æg","ost","cheddar","mozzarella","parmesan","feta","brie","gouda",
+      "ricotta","halloumi","flødeost","hytteost","kvark",
     ],
   },
   {
-    key: "aisleDairyEggsLabel",
+    key: "aislePantryLabel",
     keywords: [
-      "milk","semi-skimmed","skimmed","whole milk","oat milk","almond milk","soy milk",
-      "coconut milk","butter","margarine","cream","double cream","single cream","sour cream",
-      "crème fraîche","creme fraiche","yogurt","yoghurt","greek yogurt","egg","eggs","quark",
-      // Danish
-      "mælk","minimælk","skummetmælk","sødmælk","havremælk","mandelmælk","sojamælk",
-      "kokosmælk","smør","margarine","fløde","piskefløde","creme fraiche","cremefraiche",
-      "yoghurt","græsk yoghurt","æg","kvark",
+      "tortilla","wrap","flour tortilla","corn tortilla",
+      "pasta","spaghetti","penne","rice","noodle","couscous","quinoa","flour","oat",
+      "tin","canned","jar","beans","chickpea","lentil","tomato sauce","passata","stock",
+      "broth","coconut milk","olive","pesto","soy sauce","vinegar","olive oil","sugar",
+      "honey","jam","ketchup","mustard","mayo","spice","cumin","paprika","turmeric",
+      "cinnamon","baking powder","breadcrumb","cereal","granola","tahini","peanut butter",
+      "chocolate","cocoa","cornflour","cornstarch","kidney bean","black bean","lasagne",
+      "fusilli","rigatoni","tagliatelle","linguine","macaroni","gnocchi","basmati",
+      "jasmine","arborio","risotto","bulgur","polenta","sriracha","fish sauce","hoisin",
+      "teriyaki","bbq sauce","balsamic","sesame oil","sunflower oil","coconut oil",
+      "ris","nudler","kikærter","linser","tomatsauce","bouillon","kokosmælk","oliven",
+      "sojasauce","eddike","olivenolie","sukker","honning","syltetøj","sennest","mayo",
+      "krydderier","spidskommen","gurkemeje","kanel","bagepulver","rasp","müsli",
+      "jordnøddesmør","chokolade","kakao","majsstivelse","havregryn","mel",
     ],
   },
   {
-    key: "aisleFrozenLabel",
+    key: "aisleDrinksSnacksLabel",
     keywords: [
-      "frozen","ice cream","sorbet","gelato","frozen pea","frozen corn","frozen vegetable",
-      "frozen fruit","frozen fish","frozen chicken","fish finger","fish fingers","pizza",
-      "frozen meal","frozen dinner",
-      // Danish
-      "frossen","frosne","is","flødeis","frugtsorbét","frosne ærter","frossen fisk",
-      "frossen kylling","fiskefingre","frossen pizza","frossen ret",
-    ],
-  },
-  {
-    key: "aislePastaRiceLabel",
-    keywords: [
-      "pasta","spaghetti","penne","rigatoni","fusilli","tagliatelle","linguine","fettuccine",
-      "lasagne","lasagna","macaroni","gnocchi","noodle","noodles","rice","basmati","jasmine",
-      "arborio","risotto","quinoa","couscous","bulgur","polenta","oat","oats","porridge",
-      "granola","muesli","cereal","cornflake","wheat","flour","breadcrumb","breadcrumbs",
-      // Danish
-      "pasta","spaghetti","penne","fusilli","lasagne","makaroni","nudler","ris","basmati",
-      "jasminris","risotto","quinoa","couscous","bulgur","polenta","havregryn","müsli",
-      "morgenmad","cornflakes","hvedemel","mel","rasp",
-    ],
-  },
-  {
-    key: "aisleTinsJarsLabel",
-    keywords: [
-      "tin","tinned","canned","can of","jar","beans","chickpea","chickpeas","lentil","lentils",
-      "kidney bean","black bean","cannellini","butter bean","baked beans","tomato sauce",
-      "passata","chopped tomato","chopped tomatoes","coconut cream","stock","broth","soup",
-      "tuna tin","sardine tin","anchov","olive","olives","capers","pickle","pickles","gherkin",
-      "pesto","pasta sauce","tahini","peanut butter","almond butter","jam","marmalade","honey",
-      "syrup","maple","treacle","spread",
-      // Danish
-      "dåse","på dåse","glas","bønner","kikærter","linser","kidneybønner","sorte bønner",
-      "hvide bønner","tomatsauce","passata","hakkede tomater","kokosfløde","bouillon","suppe",
-      "oliven","kapers","sylteagurk","pesto","pastasauce","tahini","jordnøddesmør","syltetøj",
-      "marmelade","honning","sirup","ahornsirup","smørepålæg",
-    ],
-  },
-  {
-    key: "aisleCondimentsLabel",
-    keywords: [
-      "ketchup","mustard","mayo","mayonnaise","relish","hot sauce","sriracha","soy sauce",
-      "worcestershire","tabasco","vinegar","balsamic","apple cider vinegar","fish sauce",
-      "oyster sauce","hoisin","teriyaki","bbq sauce","salsa","guacamole","aioli",
-      // Danish
-      "ketchup","sennep","mayo","mayonnaise","chilisauce","sojasauce","worcestershire",
-      "eddike","balsamico","æblecidereddike","fiskesauce","østersauce","bbq sauce","salsa",
-    ],
-  },
-  {
-    key: "aisleOilsBakingLabel",
-    keywords: [
-      "oil","olive oil","vegetable oil","sunflower oil","coconut oil","sesame oil","rapeseed",
-      "sugar","brown sugar","caster sugar","icing sugar","baking powder","baking soda",
-      "bicarbonate","yeast","vanilla","cocoa","chocolate","dark chocolate","milk chocolate",
-      "white chocolate","cornstarch","cornflour","salt","pepper","spice","spices","cumin",
-      "paprika","turmeric","cinnamon","nutmeg","cardamom","clove","cloves","bay leaf","bay leaves",
-      "curry powder","garam masala","mixed spice","chilli flakes","cayenne","seasoning",
-      // Danish
-      "olie","olivenolie","solsikkeolie","kokosolie","sesamolie","rapsolie",
-      "sukker","brun farin","rørsukker","flormelis","bagepulver","natron","gær","vanilje",
-      "kakao","chokolade","mørk chokolade","mælkechokolade","hvid chokolade","majsstivelse",
-      "salt","peber","krydderier","spidskommen","paprika","gurkemeje","kanel","muskatnød",
-      "kardemomme","nellike","laurbærblad","karry","garam masala","chiliflager","cayennepeber",
-    ],
-  },
-  {
-    key: "aisleSnacksDrinksLabel",
-    keywords: [
-      "juice","orange juice","apple juice","water","sparkling","soda","cola","lemonade",
-      "coffee","tea","herbal tea","wine","beer","cider","spirits","gin","vodka","whisky",
-      "crisp","crisps","chip","chips","popcorn","pretzel","cracker","crackers","biscuit",
-      "biscuits","cookie","cookies","chocolate bar","sweet","sweets","candy","nut","nuts",
-      "almond","cashew","walnut","peanut","pistachio","seed","seeds","dried fruit","raisin",
-      "raisins","energy drink","protein shake","kombucha","smoothie",
-      // Danish
-      "juice","appelsinjuice","æblejuice","vand","sodavand","cola","limonade","kaffe","te",
-      "urtete","vin","øl","cider","gin","vodka","whisky","chips","popcorn","kiks","småkager",
-      "chokoladebar","slik","nødder","mandler","cashew","valnød","jordnød","pistacienødder",
-      "frø","tørret frugt","rosiner","energidrik","proteinshake","kombucha","smoothie",
+      "juice","water","soda","cola","coffee","tea","wine","beer","cider","gin","vodka",
+      "whisky","crisp","chip","popcorn","cracker","biscuit","cookie","chocolate bar",
+      "sweet","candy","nut","almond","cashew","walnut","peanut","pistachio","dried fruit",
+      "raisin","energy drink","smoothie","kombucha","protein shake","sparkling","lemonade",
+      "vand","sodavand","kaffe","te","vin","øl","chips","kiks","småkager","slik",
+      "nødder","mandler","valnød","jordnød","rosiner","energidrik",
     ],
   },
   {
     key: "aisleHouseholdLabel",
     keywords: [
-      "washing","detergent","soap","shampoo","conditioner","toothpaste","toilet","tissue",
-      "kitchen roll","paper towel","bin bag","bin liner","cling film","foil","baking paper",
-      "parchment","zip lock","bag","cleaning","bleach","spray","sponge","cloth","dishwasher",
-      // Danish
-      "vaskemiddel","rengøringsmiddel","sæbe","shampoo","balsam","tandpasta","toiletpapir",
-      "køkkenrulle","papirhåndklæde","affaldspose","husholdningsfilm","staniol","bagepapir",
-      "rengøring","blegemiddel","svamp","klud","opvaskemaskine",
+      "washing","detergent","soap","shampoo","toothpaste","toilet paper","tissue",
+      "kitchen roll","bin bag","cling film","foil","baking paper","cleaning","bleach",
+      "sponge","dishwasher tablet",
+      "vaskemiddel","sæbe","shampoo","tandpasta","toiletpapir","køkkenrulle",
+      "affaldspose","husholdningsfilm","staniol","bagepapir","rengøring","svamp",
     ],
   },
 ];
 
-const OTHER_KEY = "aisleOtherLabel" as const;
-
-function detectAisleKey(name: string): typeof AISLE_KEYS[number] {
+function detectAisleKey(name: string): AisleKey {
   const lower = name.toLowerCase();
   for (const aisle of AISLES) {
     if (aisle.keywords.some((kw) => lower.includes(kw))) return aisle.key;
   }
-  return OTHER_KEY;
+  return "aisleOtherLabel";
 }
 
 type SortMode = "aisle" | "day";
 
-const ShoppingList = ({ ingredients, onClose, onToggle }: ShoppingListProps) => {
+const ShoppingList = ({
+  ingredients,
+  extras,
+  onClose,
+  onToggle,
+  onAddExtra,
+  onToggleExtra,
+  onDeleteExtra,
+}: ShoppingListProps) => {
   const { t } = useLanguage();
   const [sortMode, setSortMode] = useState<SortMode>("aisle");
+  const [newExtra, setNewExtra] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Helper: get translated aisle label with fallback
-  const aisleLabel = (key: typeof AISLE_KEYS[number]) =>
-    (t as any)[key] ?? AISLE_FALLBACKS[key];
+  const handleAddExtra = () => {
+    const trimmed = newExtra.trim();
+    if (!trimmed) return;
+    onAddExtra(trimmed);
+    setNewExtra("");
+    inputRef.current?.focus();
+  };
 
-  // ── Deduplicate by name ──────────────────────────────────────────────────
+  // ── Group meal ingredients ──────────────────────────
   const groupedIngredients = ingredients.reduce((acc, ing) => {
     const key = ing.name.toLowerCase();
     const existing = acc.find((item) => item.name.toLowerCase() === key);
@@ -251,63 +169,76 @@ const ShoppingList = ({ ingredients, onClose, onToggle }: ShoppingListProps) => 
     return acc;
   }, [] as { name: string; days: string[]; items: typeof ingredients }[]);
 
-  const unchecked = groupedIngredients.filter((g) => g.items.some((i) => !i.checked));
-  const checked   = groupedIngredients.filter((g) => g.items.every((i) => i.checked));
-  const allDone   = checked.length === groupedIngredients.length && groupedIngredients.length > 0;
+  const uncheckedMeal = groupedIngredients.filter((g) => g.items.some((i) => !i.checked));
+  const checkedMeal   = groupedIngredients.filter((g) => g.items.every((i) => i.checked));
 
-  const handleToggle = (group: typeof groupedIngredients[0]) => {
-    const allChecked = group.items.every((i) => i.checked);
-    group.items.forEach((i) => {
-      if (allChecked || !i.checked) onToggle(i.dayIndex, i.id);
-    });
-  };
+  const uncheckedExtras = extras.filter((e) => !e.checked);
+  const checkedExtras   = extras.filter((e) => e.checked);
 
-  // ── Aisle grouping ───────────────────────────────────────────────────────
+  const totalItems   = groupedIngredients.length + extras.length;
+  const checkedCount = checkedMeal.length + checkedExtras.length;
+  const allDone      = totalItems > 0 && checkedCount === totalItems;
+
+  // ── Aisle grouping (meal items + extras mixed) ──────
   const byAisle = (() => {
-    const map = new Map<string, { key: typeof AISLE_KEYS[number]; items: typeof groupedIngredients }>();
-    unchecked.forEach((g) => {
+    const map = new Map<AisleKey, { name: string; days: string[]; items: typeof ingredients; extraId?: string }[]>();
+    uncheckedMeal.forEach((g) => {
       const key = detectAisleKey(g.name);
-      if (!map.has(key)) map.set(key, { key, items: [] });
-      map.get(key)!.items.push(g);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(g);
     });
-    return [...map.values()].sort((a, b) => {
-      const ai = [...AISLES.map(x => x.key), OTHER_KEY].indexOf(a.key);
-      const bi = [...AISLES.map(x => x.key), OTHER_KEY].indexOf(b.key);
-      return ai - bi;
+    uncheckedExtras.forEach((e) => {
+      const key = detectAisleKey(e.name);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push({ name: e.name, days: [], items: [], extraId: e.id });
     });
+    return [...map.entries()].sort(
+      (a, b) => AISLE_ORDER.indexOf(a[0]) - AISLE_ORDER.indexOf(b[0])
+    );
   })();
 
-  // ── Day grouping ─────────────────────────────────────────────────────────
+  // ── Day grouping (meal items only; extras at top) ───
   const byDay = (() => {
-    const map = new Map<string, { dayLabel: string; dayIndex: number; items: typeof groupedIngredients }>();
-    unchecked.forEach((g) => {
+    const map = new Map<string, { dayIndex: number; items: typeof groupedIngredients }>();
+    uncheckedMeal.forEach((g) => {
       g.items.forEach((item) => {
         if (!item.checked) {
-          const key = item.day;
-          if (!map.has(key)) map.set(key, { dayLabel: item.day, dayIndex: item.dayIndex, items: [] });
-          if (!map.get(key)!.items.find((x) => x.name.toLowerCase() === g.name.toLowerCase())) {
-            map.get(key)!.items.push(g);
+          if (!map.has(item.day)) map.set(item.day, { dayIndex: item.dayIndex, items: [] });
+          const existing = map.get(item.day)!;
+          if (!existing.items.find((x) => x.name.toLowerCase() === g.name.toLowerCase())) {
+            existing.items.push(g);
           }
         }
       });
     });
-    return [...map.values()].sort((a, b) => a.dayIndex - b.dayIndex);
+    return [...map.entries()].sort((a, b) => a[1].dayIndex - b[1].dayIndex);
   })();
 
-  const IngredientRow = ({ group, isCheckedStyle = false }: {
+  // ── Row components ───────────────────────────────────
+  const MealRow = ({
+    group,
+    isCheckedStyle = false,
+    hideDay = false,
+  }: {
     group: typeof groupedIngredients[0];
     isCheckedStyle?: boolean;
+    hideDay?: boolean;
   }) => (
     <div
       className={`shopping-row${isCheckedStyle ? " is-checked" : ""}`}
-      onClick={() => handleToggle(group)}
+      onClick={() => {
+        const allChecked = group.items.every((i) => i.checked);
+        group.items.forEach((i) => {
+          if (allChecked || !i.checked) onToggle(i.dayIndex, i.id);
+        });
+      }}
       role="button"
       tabIndex={0}
     >
       <div className={`shopping-circle${isCheckedStyle ? " is-checked" : ""}`} />
       <div className="shopping-row__info">
         <p className="shopping-row__name">{group.name}</p>
-        {!isCheckedStyle && sortMode === "aisle" && group.days.length > 0 && (
+        {!isCheckedStyle && !hideDay && group.days.length > 0 && (
           <div className="shopping-row__tags">
             {group.days.map((day, i) => (
               <span key={i} className="shopping-row__tag">{day}</span>
@@ -321,10 +252,28 @@ const ShoppingList = ({ ingredients, onClose, onToggle }: ShoppingListProps) => 
     </div>
   );
 
-  // Toggle labels — use translations if available, else fallback
-  const byAisleLabel = (t as any).sortByAisle ?? "By aisle";
-  const byDayLabel   = (t as any).sortByDay   ?? "By day";
-  const inBasketLabel = (t as any).inBasket   ?? "In basket";
+  const ExtraRow = ({ extra, isCheckedStyle = false }: { extra: Ingredient; isCheckedStyle?: boolean }) => (
+    <div
+      className={`shopping-row${isCheckedStyle ? " is-checked" : ""}`}
+      onClick={() => onToggleExtra(extra.id)}
+      role="button"
+      tabIndex={0}
+    >
+      <div className={`shopping-circle${isCheckedStyle ? " is-checked" : ""}`} />
+      <div className="shopping-row__info">
+        <p className="shopping-row__name">{extra.name}</p>
+      </div>
+      {!isCheckedStyle && (
+        <button
+          className="ingredient-delete"
+          onClick={(e) => { e.stopPropagation(); onDeleteExtra(extra.id); }}
+          aria-label="Remove"
+        >
+          <Trash2 size={13} />
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div className="sheet-overlay" onClick={onClose}>
@@ -334,78 +283,116 @@ const ShoppingList = ({ ingredients, onClose, onToggle }: ShoppingListProps) => 
         <div className="sheet__hd">
           <div>
             <h2 className="sheet__title">{t.shoppingList}</h2>
-            <p className="sheet__sub">{checked.length}/{groupedIngredients.length} {(t as any).inBasket ?? "in basket"}</p>
+            <p className="sheet__sub">{checkedCount}/{totalItems} {t.inBasket}</p>
           </div>
           <button className="sheet__close" onClick={onClose} aria-label="Close">
             <X size={14} strokeWidth={2} />
           </button>
         </div>
 
-        {/* Sort toggle */}
-        {groupedIngredients.length > 0 && (
+        {totalItems > 0 && (
           <div className="sort-toggle-bar">
             <div className="sort-toggle">
               <button
                 className={`sort-toggle__btn${sortMode === "aisle" ? " is-active" : ""}`}
                 onClick={() => setSortMode("aisle")}
               >
-                {byAisleLabel}
+                {t.sortByAisle}
               </button>
               <button
                 className={`sort-toggle__btn${sortMode === "day" ? " is-active" : ""}`}
                 onClick={() => setSortMode("day")}
               >
-                {byDayLabel}
+                {t.sortByDay}
               </button>
             </div>
           </div>
         )}
 
         <div className="sheet__body">
-          {groupedIngredients.length === 0 ? (
+          {totalItems === 0 ? (
             <div className="shopping-empty">
-              <p>{(t as any).noIngredientsYet ?? "No ingredients yet."}</p>
-              <p>{(t as any).addMealsFirst ?? "Add meals and ingredients to your week first."}</p>
+              <p>{t.noIngredientsYet}</p>
+              <p>{t.addMealsFirst}</p>
             </div>
           ) : (
             <>
-              {sortMode === "aisle" && byAisle.map(({ key, items }) => (
+              {/* ── Aisle view ── */}
+              {sortMode === "aisle" && byAisle.map(([key, items]) => (
                 <div key={key}>
-                  <div className="shopping-divider aisle-divider">
-                    <span>{aisleLabel(key)}</span>
-                  </div>
-                  {items.map((group) => (
-                    <IngredientRow key={group.name} group={group} />
-                  ))}
-                </div>
-              ))}
-
-              {sortMode === "day" && byDay.map(({ dayLabel, items }) => (
-                <div key={dayLabel}>
                   <div className="shopping-divider">
-                    <span>{dayLabel}</span>
+                    <span>{(t as any)[key]}</span>
                   </div>
-                  {items.map((group) => (
-                    <IngredientRow key={group.name + dayLabel} group={group} />
-                  ))}
+                  {items.map((item) =>
+                    item.extraId ? (
+                      <ExtraRow
+                        key={item.extraId}
+                        extra={extras.find((e) => e.id === item.extraId)!}
+                      />
+                    ) : (
+                      <MealRow key={item.name} group={item as typeof groupedIngredients[0]} />
+                    )
+                  )}
                 </div>
               ))}
 
-              {checked.length > 0 && unchecked.length > 0 && (
-                <div className="shopping-divider"><span>{inBasketLabel}</span></div>
+              {/* ── Day view ── */}
+              {sortMode === "day" && (
+                <>
+                  {uncheckedExtras.length > 0 && (
+                    <div>
+                      <div className="shopping-divider"><span>Extra</span></div>
+                      {uncheckedExtras.map((extra) => (
+                        <ExtraRow key={extra.id} extra={extra} />
+                      ))}
+                    </div>
+                  )}
+                  {byDay.map(([dayLabel, { items }]) => (
+                    <div key={dayLabel}>
+                      <div className="shopping-divider"><span>{dayLabel}</span></div>
+                      {items.map((group) => (
+                        <MealRow key={group.name + dayLabel} group={group} hideDay />
+                      ))}
+                    </div>
+                  ))}
+                </>
               )}
-              {checked.map((group) => (
-                <IngredientRow key={group.name + "-checked"} group={group} isCheckedStyle />
+
+              {/* ── Checked / in basket ── */}
+              {(checkedMeal.length > 0 || checkedExtras.length > 0) &&
+                (uncheckedMeal.length > 0 || uncheckedExtras.length > 0) && (
+                <div className="shopping-divider"><span>{t.inBasket}</span></div>
+              )}
+              {checkedMeal.map((group) => (
+                <MealRow key={group.name + "-checked"} group={group} isCheckedStyle />
+              ))}
+              {checkedExtras.map((extra) => (
+                <ExtraRow key={extra.id + "-checked"} extra={extra} isCheckedStyle />
               ))}
 
               {allDone && (
                 <div className="shopping-complete">
-                  <p>{(t as any).allDone ?? "All done!"}</p>
-                  <p>{(t as any).allSetForWeek ?? "You're all set for the week."}</p>
+                  <p>{t.allDone}</p>
+                  <p>{t.allSetForWeek}</p>
                 </div>
               )}
             </>
           )}
+        </div>
+
+        {/* ── Sticky add bar ── */}
+        <div className="sheet__add-bar">
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Add to list..."
+            value={newExtra}
+            onChange={(e) => setNewExtra(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAddExtra()}
+          />
+          <button onClick={handleAddExtra} aria-label="Add">
+            <Plus size={16} strokeWidth={2.5} />
+          </button>
         </div>
       </div>
     </div>

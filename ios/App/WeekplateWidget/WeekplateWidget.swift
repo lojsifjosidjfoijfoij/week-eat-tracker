@@ -7,7 +7,7 @@ struct MealEntry: TimelineEntry {
 }
 
 struct Provider: TimelineProvider {
-    let appGroup = "group.com.Louis.weekplate"
+    let appGroup = "group.com.louis.dinrr"
 
     func placeholder(in context: Context) -> MealEntry {
         MealEntry(date: Date(), meal: "Pasta Carbonara")
@@ -75,7 +75,7 @@ struct DinerrWidgetView: View {
             bg
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("dinerr")
+                    Text("dinrr")
                         .font(.system(size: 12)).italic()
                         .foregroundColor(ink3)
                     Spacer()
@@ -111,7 +111,7 @@ struct DinerrWidgetView: View {
             bg
             HStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("dinerr")
+                    Text("dinrr")
                         .font(.system(size: 13)).italic()
                         .foregroundColor(ink3)
                     Spacer()
@@ -174,7 +174,7 @@ struct WeekplateWidget: Widget {
             DinerrWidgetView(entry: entry)
                 .containerBackground(Color(hex: "F2EFE9"), for: .widget)
         }
-        .configurationDisplayName("dinerr")
+        .configurationDisplayName("dinrr")
         .description("See tonight's dinner at a glance.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }

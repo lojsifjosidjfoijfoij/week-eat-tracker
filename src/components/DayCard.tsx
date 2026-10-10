@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Plus, Trash2, Sparkles, Lock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePremium } from "@/contexts/PremiumContext";
 import { supabase } from "@/lib/supabase";
@@ -29,7 +28,7 @@ const DayCard = ({
   const [isEditingMeal, setIsEditingMeal] = useState(!meal);
   const [suggestedIngredients, setSuggestedIngredients] = useState<string[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  const { toast } = useToast();
+  const [suggestionError, setSuggestionError] = useState("");
   const { t } = useLanguage();
   const { isPremium, openPaywall } = usePremium();
 
@@ -55,6 +54,7 @@ const DayCard = ({
 
   const fetchSuggestions = async (mealName: string) => {
     setIsLoadingSuggestions(true);
+    setSuggestionError("");
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) { return; }
@@ -71,11 +71,7 @@ const DayCard = ({
       const data = await response.json();
       setSuggestedIngredients(data.ingredients || []);
     } catch (error) {
-      toast({
-        title: t.couldntGetSuggestions,
-        description: error instanceof Error ? error.message : t.pleaseTryAgain,
-        variant: "destructive",
-      });
+      setSuggestionError(error instanceof Error ? error.message : t.pleaseTryAgain);
     } finally {
       setIsLoadingSuggestions(false);
     }
@@ -124,6 +120,11 @@ const DayCard = ({
             <Sparkles size={12} />
             <span>{t.gettingSuggestions}</span>
           </div>
+        )}
+
+        {/* AI error */}
+        {suggestionError && (
+          <p style={{ fontSize: "0.8rem", color: "var(--red)", marginBottom: "10px" }}>{suggestionError}</p>
         )}
 
         {/* AI suggestions — premium only */}
