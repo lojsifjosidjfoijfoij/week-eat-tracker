@@ -1,128 +1,191 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { supabase } from '@/lib/supabase'
-import { User, Session } from '@supabase/supabase-js'
-import { Capacitor } from '@capacitor/core'
-import { App } from '@capacitor/app'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { AuthError, Session, User } from "@supabase/supabase-js";
+import { Capacitor } from "@capacitor/core";
+import { App } from "@capacitor/app";
+import { supabase } from "@/lib/supabase";
+import { AUTH_REDIRECT_URL } from "@/config";
+import { clearWidget } from "@/lib/sharedStorage";
+import { resetIdentity } from "@/lib/revenuecat";
+import { safeLocal } from "@/lib/storage";
 
-interface AuthContextType {
-  user: User | null
-  session: Session | null
-  loading: boolean
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>
-  signIn: (email: string, password: string) => Promise<{ error: any }>
-  signOut: () => Promise<void>
-  deleteAccount: () => Promise<{ error: any }>
+export type AuthErrorKind =
+  | "wrongCredentials" | "emailNotConfirmed" | "emailInUse" | "tooManyAttempts" | "weakPassword"
+  | "invalidEmail" | "linkExpired" | "network" | "unknown";
+
+type Result = { ok: true } | { ok: false; error: AuthErrorKind; message?: string };
+
+type AuthContextType = {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  /** true after opening a password-reset link — show the "choose new password" screen */
+  recovering: boolean;
+  linkError: AuthErrorKind | null;
+  clearLinkError: () => void;
+  signUp: (email: string, password: string, fullName: string) => Promise<Result>;
+  signIn: (email: string, password: string) => Promise<Result>;
+  resendConfirmation: (email: string) => Promise<Result>;
+  requestPasswordReset: (email: string) => Promise<Result>;
+  updatePassword: (password: string) => Promise<Result>;
+  signOut: () => Promise<void>;
+  deleteAccount: () => Promise<Result>;
+};
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+function classify(error: AuthError | Error | null | undefined): AuthErrorKind {
+  if (!error) return "unknown";
+  const code = (error as AuthError).code ?? "";
+  const msg = (error.message ?? "").toLowerCase();
+  if (code === "invalid_credentials" || msg.includes("invalid login")) return "wrongCredentials";
+  if (code === "email_not_confirmed" || msg.includes("not confirmed")) return "emailNotConfirmed";
+  if (code === "user_already_exists" || code === "email_exists" || msg.includes("already registered")) return "emailInUse";
+  if (code.startsWith("over_") || msg.includes("rate limit") || msg.includes("too many")) return "tooManyAttempts";
+  if (code === "weak_password" || msg.includes("weak") || msg.includes("pwned")) return "weakPassword";
+  if (code === "email_address_invalid" || msg.includes("invalid email") || msg.includes("unable to validate email")) return "invalidEmail";
+  if (code === "otp_expired" || msg.includes("expired")) return "linkExpired";
+  if (msg.includes("fetch") || msg.includes("network")) return "network";
+  return "unknown";
 }
 
-const AuthContext = createContext<AuthContextType | null>(null)
-
-// Parses a deep-link URL from Supabase email confirmation and establishes
-// the session. Handles both the hash-fragment (implicit) and query-param
-// (PKCE) token formats that Supabase may use.
-async function handleDeepLinkUrl(url: string) {
-  if (!url.includes('login-callback')) return
-
-  // Hash fragment: dinrr://login-callback#access_token=...&refresh_token=...
-  const hashIdx = url.indexOf('#')
-  if (hashIdx !== -1) {
-    const params = new URLSearchParams(url.slice(hashIdx + 1))
-    const accessToken = params.get('access_token')
-    const refreshToken = params.get('refresh_token')
-    if (accessToken && refreshToken) {
-      const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-      if (error) console.error('Deep link setSession error:', error)
-      return
-    }
-  }
-
-  // Query params: dinrr://login-callback?code=... (PKCE exchange)
-  const queryIdx = url.indexOf('?')
-  if (queryIdx !== -1) {
-    const params = new URLSearchParams(url.slice(queryIdx + 1))
-    const code = params.get('code')
-    if (code) {
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
-      if (error) console.error('Deep link exchangeCodeForSession error:', error)
-    }
-  }
-}
+const fail = (error: AuthError | Error | null | undefined): Result => ({
+  ok: false,
+  error: classify(error),
+  message: error?.message,
+});
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [recovering, setRecovering] = useState(false);
+  const [linkError, setLinkError] = useState<AuthErrorKind | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    let mounted = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      setSession(data.session);
+      setLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      setSession(newSession);
+      setLoading(false);
+      if (event === "PASSWORD_RECOVERY") setRecovering(true);
+      if (event === "SIGNED_OUT") setRecovering(false);
+    });
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  // Deep-link handler for email confirmation on native (iOS)
+  // Email links (confirm sign-up / reset password) open the app via dinrr://login-callback
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return
+    if (!Capacitor.isNativePlatform()) return;
 
-    // Cold start: app launched directly from the confirmation link
-    App.getLaunchUrl().then((result) => {
-      if (result?.url) handleDeepLinkUrl(result.url)
-    })
+    const handle = async (url: string) => {
+      if (!url.includes("login-callback")) return;
+      const parsed = new URL(url.replace("dinrr://", "https://dinrr.app/"));
+      const params = new URLSearchParams(parsed.hash.replace(/^#/, ""));
+      parsed.searchParams.forEach((v, k) => params.set(k, v));
 
-    // Warm start: app was in the background and resumed via the link
-    let removeListener: (() => void) | undefined
-    App.addListener('appUrlOpen', (event) => {
-      handleDeepLinkUrl(event.url)
-    }).then((handle) => {
-      removeListener = () => handle.remove()
-    })
+      if (params.get("error") || params.get("error_code")) {
+        setLinkError(classify(new Error(params.get("error_description") ?? params.get("error_code") ?? "expired")));
+        return;
+      }
+      const isRecovery = params.get("type") === "recovery";
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      const code = params.get("code");
 
-    return () => { removeListener?.() }
-  }, [])
+      let error: AuthError | null;
+      if (accessToken && refreshToken) {
+        ({ error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }));
+      } else if (code) {
+        ({ error } = await supabase.auth.exchangeCodeForSession(code));
+      } else {
+        return;
+      }
+      if (error) setLinkError(classify(error));
+      else if (isRecovery) setRecovering(true);
+    };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName }, emailRedirectTo: 'dinrr://login-callback' },
-    })
-    return { error }
-  }
+    App.getLaunchUrl().then((r) => { if (r?.url) handle(r.url); }).catch(() => {});
+    const listener = App.addListener("appUrlOpen", (e) => { handle(e.url); });
+    return () => { listener.then((l) => l.remove()); };
+  }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error }
-  }
+  const value = useMemo<AuthContextType>(() => ({
+    user: session?.user ?? null,
+    session,
+    loading,
+    recovering,
+    linkError,
+    clearLinkError: () => setLinkError(null),
 
-  const signOut = async () => {
-    await supabase.auth.signOut()
-  }
+    signUp: async (email, password, fullName) => {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: { data: { full_name: fullName.trim() }, emailRedirectTo: AUTH_REDIRECT_URL },
+      });
+      if (error) return fail(error);
+      // Supabase hides "already registered" behind a user with no identities
+      if (data.user && (data.user.identities?.length ?? 0) === 0) return { ok: false, error: "emailInUse" };
+      return { ok: true };
+    },
 
-  // Deletes the authenticated user's account via a Supabase Edge Function.
-  // Deploy: supabase/functions/delete-account/index.ts using supabase.auth.admin.deleteUser()
-  const deleteAccount = async () => {
-    const { error } = await supabase.functions.invoke('delete-account')
-    if (!error) await supabase.auth.signOut()
-    return { error }
-  }
+    signIn: async (email, password) => {
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      return error ? fail(error) : { ok: true };
+    },
 
-  return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, deleteAccount }}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
+    resendConfirmation: async (email) => {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: email.trim(),
+        options: { emailRedirectTo: AUTH_REDIRECT_URL },
+      });
+      return error ? fail(error) : { ok: true };
+    },
+
+    requestPasswordReset: async (email) => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: AUTH_REDIRECT_URL });
+      return error ? fail(error) : { ok: true };
+    },
+
+    updatePassword: async (password) => {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) return fail(error);
+      setRecovering(false);
+      return { ok: true };
+    },
+
+    signOut: async () => {
+      await resetIdentity();
+      await clearWidget(safeLocal.get("mealweek-language") ?? "en");
+      await supabase.auth.signOut({ scope: "local" });
+    },
+
+    deleteAccount: async () => {
+      const userId = session?.user.id;
+      const { error } = await supabase.functions.invoke("delete-account", { method: "POST" });
+      if (error) return fail(error);
+      if (userId) {
+        for (const k of ["plan", "extras", "family", "familyPlan"]) safeLocal.remove(`dinrr:${k}:${userId}`);
+      }
+      await resetIdentity();
+      await clearWidget(safeLocal.get("mealweek-language") ?? "en");
+      await supabase.auth.signOut({ scope: "local" });
+      return { ok: true };
+    },
+  }), [session, loading, recovering, linkError]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
 export const useAuth = () => {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
-}
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+};

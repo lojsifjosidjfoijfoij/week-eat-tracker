@@ -1,73 +1,47 @@
-# Welcome to your Lovable project
+# dinrr
 
-## Project info
+Family weekly dinner planner for iPhone — React 19 + TypeScript + Vite 8, wrapped with Capacitor 8,
+backed by Supabase (auth, Postgres with RLS, realtime, edge functions) and RevenueCat (dinrr+).
 
-**URL**: https://lovable.dev/projects/79cba1ee-712b-4bec-92a8-a720d98eb8cb
+## Everyday commands
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/79cba1ee-712b-4bec-92a8-a720d98eb8cb) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+cd ~/week-eat-tracker
+npm install                 # after pulling changes to package.json
+npm run dev                 # browser preview at http://localhost:8080 (tap the logo 5× for fake dinrr+)
+npm run ios                 # typecheck + build + copy into the iOS project
+npx cap open ios            # open Xcode
+npm run lint && npm test    # checks
 ```
 
-**Edit a file directly in GitHub**
+## Project layout
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+| Path | What it is |
+| --- | --- |
+| `src/config.ts` | Public keys, product ids, links |
+| `src/lib/useWeekPlan.ts` | All planner data: local mode, family mode, realtime sync, debounced saves |
+| `src/contexts/` | Auth, Family, Premium (RevenueCat + server status), Language, Toasts |
+| `src/lib/revenuecat.ts` | The **only** place RevenueCat is configured |
+| `src/lib/i18n.ts` | All texts in en / da / de / fr / es |
+| `src/lib/aisles.ts` | Shopping-list aisle sorting (+ tests) |
+| `supabase/migrations/` | Database schema & security (run in the SQL editor) |
+| `supabase/functions/` | `suggest-ingredients`, `sync-premium`, `revenuecat-webhook`, `delete-account` |
+| `ios/App/WeekplateWidget/` | Home-screen widget (reads the App Group) |
 
-**Use GitHub Codespaces**
+## How premium works
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+* The buyer's own subscription comes from the RevenueCat SDK instantly.
+* The server keeps `public.entitlements` up to date (`sync-premium` on launch/purchase,
+  `revenuecat-webhook` on renewals/cancellations). Everyone in a family gets dinrr+ while any
+  member has an active subscription. Creating a family and AI suggestions are checked on the server.
+* Testers / friends: give free dinrr+ with the SQL snippet at the bottom of the migration file.
 
-## What technologies are used for this project?
+## Backend setup (once)
 
-This project is built with:
+1. Run `supabase/migrations/20261010120000_security_overhaul.sql` in the Supabase SQL editor.
+2. Set secrets and deploy the functions:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/79cba1ee-712b-4bec-92a8-a720d98eb8cb) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```bash
+supabase secrets set REVENUECAT_SECRET_KEY=sk_... REVENUECAT_WEBHOOK_SECRET=<random string>
+supabase functions deploy        # deploys every function; JWT settings come from supabase/config.toml
+```

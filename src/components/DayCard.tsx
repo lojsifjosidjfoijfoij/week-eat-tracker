@@ -1,212 +1,244 @@
-import { useState } from "react";
-import { Plus, Trash2, Sparkles, Lock } from "lucide-react";
+import { memo, useRef, useState } from "react";
+import { FunctionsHttpError } from "@supabase/supabase-js";
+import { Lock, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePremium } from "@/contexts/PremiumContext";
 import { supabase } from "@/lib/supabase";
+import { haptic } from "@/lib/haptics";
+import type { Item } from "@/lib/useWeekPlan";
 
-interface Ingredient {
-  id: string;
-  name: string;
-  checked: boolean;
-}
-
-interface DayCardProps {
-  day: string;
+type Props = {
+  dayIndex: number;
+  dayLabel: string;
+  isToday: boolean;
   meal: string;
-  ingredients: Ingredient[];
-  onMealChange: (meal: string) => void;
-  onAddIngredient: (name: string) => void;
-  onToggleIngredient: (id: string) => void;
-  onDeleteIngredient: (id: string) => void;
+  ingredients: Item[];
+  readOnly: boolean;
+  onMealChange: (day: number, meal: string) => void;
+  onMealCommit: (day: number) => void;
+  onAddIngredients: (day: number, names: string[]) => void;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+};
+
+async function functionError(error: unknown): Promise<string> {
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const body = await error.context.json();
+      return typeof body?.error === "string" ? body.error : "unknown";
+    } catch {
+      return "unknown";
+    }
+  }
+  return "network";
 }
 
 const DayCard = ({
-  day, meal, ingredients,
-  onMealChange, onAddIngredient, onToggleIngredient, onDeleteIngredient,
-}: DayCardProps) => {
-  const [newIngredient, setNewIngredient] = useState("");
-  const [isEditingMeal, setIsEditingMeal] = useState(!meal);
-  const [suggestedIngredients, setSuggestedIngredients] = useState<string[]>([]);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  const [suggestionError, setSuggestionError] = useState("");
-  const { t } = useLanguage();
+  dayIndex, dayLabel, isToday, meal, ingredients, readOnly,
+  onMealChange, onMealCommit, onAddIngredients, onToggle, onDelete,
+}: Props) => {
+  const { t, language } = useLanguage();
   const { isPremium, openPaywall } = usePremium();
 
-  const completedCount = ingredients.filter((i) => i.checked).length;
-  const totalCount = ingredients.length;
-  const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const [editing, setEditing] = useState(false);
+  const [newIngredient, setNewIngredient] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [loadingAI, setLoadingAI] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const mealAtFocus = useRef(meal);
+  const mealInput = useRef<HTMLInputElement>(null);
 
-  const handleAddIngredient = () => {
-    if (newIngredient.trim()) {
-      onAddIngredient(newIngredient.trim());
-      setNewIngredient("");
-    }
-  };
-
-  const handleMealBlur = async () => {
-    if (meal && meal !== "") {
-      setIsEditingMeal(false);
-      if (ingredients.length === 0 && isPremium) {
-        await fetchSuggestions(meal);
-      }
-    }
-  };
+  const done = ingredients.filter((i) => i.checked).length;
+  const total = ingredients.length;
+  const showMealInput = !readOnly && (editing || !meal);
 
   const fetchSuggestions = async (mealName: string) => {
-    setIsLoadingSuggestions(true);
-    setSuggestionError("");
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) { return; }
-      const token = session.access_token;
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/suggest-ingredients`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ mealName, language: t.languageCode }),
-        }
-      );
-      if (!response.ok) throw new Error((await response.json()).error || "Failed");
-      const data = await response.json();
-      setSuggestedIngredients(data.ingredients || []);
-    } catch (error) {
-      setSuggestionError(error instanceof Error ? error.message : t.pleaseTryAgain);
-    } finally {
-      setIsLoadingSuggestions(false);
+    if (!mealName.trim()) return;
+    setLoadingAI(true);
+    setAiError("");
+    setSuggestions([]);
+    const { data, error } = await supabase.functions.invoke("suggest-ingredients", {
+      body: { mealName: mealName.trim(), language },
+    });
+    setLoadingAI(false);
+    if (error) {
+      const code = await functionError(error);
+      if (code === "premium_required") openPaywall();
+      else setAiError(code === "daily_limit" ? t.aiDailyLimit : t.aiUnavailable);
+      return;
     }
+    const list: string[] = Array.isArray(data?.ingredients) ? data.ingredients : [];
+    const existing = new Set(ingredients.map((i) => i.name.toLowerCase()));
+    const fresh = list.filter((n) => !existing.has(n.toLowerCase()));
+    if (fresh.length) setSuggestions(fresh);
+    else setAiError(t.aiUnavailable);
+  };
+
+  const commitMeal = () => {
+    setEditing(false);
+    onMealCommit(dayIndex);
+    const changed = meal.trim() && meal.trim() !== mealAtFocus.current.trim();
+    if (changed && ingredients.length === 0 && isPremium) fetchSuggestions(meal);
+  };
+
+  const addIngredient = () => {
+    const name = newIngredient.trim();
+    if (!name) return;
+    onAddIngredients(dayIndex, [name]);
+    setNewIngredient("");
+  };
+
+  const addSuggestion = (name: string) => {
+    haptic.tap();
+    onAddIngredients(dayIndex, [name]);
+    setSuggestions((s) => s.filter((x) => x !== name));
+  };
+
+  const addAllSuggestions = () => {
+    haptic.success();
+    onAddIngredients(dayIndex, suggestions);
+    setSuggestions([]);
   };
 
   return (
-    <div className="day-card animate-fade-in">
-
+    <section className={`day-card${isToday ? " day-card--today" : ""}`} aria-label={dayLabel}>
       <div className="day-card__hd">
-        <span className="day-card__label">{day}</span>
-        {totalCount > 0 && (
-          <div className="day-card__progress">
-            <span className="day-card__progress-count">{completedCount}/{totalCount}</span>
+        <span className="day-card__label">
+          {dayLabel}
+          {isToday && <span className="day-card__today">{t.today}</span>}
+        </span>
+        {total > 0 && (
+          <div className="day-card__progress" aria-label={`${done}/${total}`}>
+            <span className="day-card__progress-count">{done}/{total}</span>
             <div className="day-card__bar">
-              <div className="day-card__fill" style={{ width: `${progress}%` }} />
+              <div className="day-card__fill" style={{ width: `${(done / total) * 100}%` }} />
             </div>
           </div>
         )}
       </div>
 
       <div className="day-card__body">
-
-        {isEditingMeal ? (
+        {showMealInput ? (
           <input
+            ref={mealInput}
             type="text"
+            className="meal-input"
             placeholder={t.enterMealName}
             value={meal}
-            onChange={(e) => onMealChange(e.target.value)}
-            onBlur={handleMealBlur}
-            onKeyPress={(e) => e.key === "Enter" && handleMealBlur()}
-            autoFocus
-            className="meal-input"
+            maxLength={200}
+            enterKeyHint="done"
+            autoComplete="off"
+            autoCapitalize="sentences"
+            autoFocus={editing}
+            onFocus={() => { mealAtFocus.current = meal; setEditing(true); }}
+            onChange={(e) => onMealChange(dayIndex, e.target.value)}
+            onBlur={commitMeal}
+            onKeyDown={(e) => { if (e.key === "Enter") mealInput.current?.blur(); }}
           />
         ) : (
           <button
-            onClick={() => setIsEditingMeal(true)}
             className={`meal-display${!meal ? " meal-display--empty" : ""}`}
+            onClick={() => { if (!readOnly) { mealAtFocus.current = meal; setEditing(true); } }}
+            disabled={readOnly && !meal}
           >
             {meal || t.addMeal}
           </button>
         )}
 
-        {/* AI loading */}
-        {isLoadingSuggestions && (
-          <div className="ai-loading">
-            <Sparkles size={12} />
+        {loadingAI && (
+          <div className="ai-loading" role="status">
+            <Sparkles size={12} className="ai-loading__icon" />
             <span>{t.gettingSuggestions}</span>
           </div>
         )}
 
-        {/* AI error */}
-        {suggestionError && (
-          <p style={{ fontSize: "0.8rem", color: "var(--red)", marginBottom: "10px" }}>{suggestionError}</p>
-        )}
+        {aiError && <p className="ai-error">{aiError}</p>}
 
-        {/* AI suggestions — premium only */}
-        {isPremium && suggestedIngredients.length > 0 && (
+        {suggestions.length > 0 && (
           <div>
             <div className="ai-bar">
-              <span className="ai-label">
-                <Sparkles size={10} />
-                {t.suggestedIngredients}
+              <span className="ai-label"><Sparkles size={10} />{t.suggestedIngredients}</span>
+              <span className="ai-actions">
+                <button className="ai-add-all" onClick={addAllSuggestions}>{t.addAll}</button>
+                <button className="ai-dismiss" onClick={() => setSuggestions([])}>{t.dismiss}</button>
               </span>
-              <button className="ai-dismiss" onClick={() => setSuggestedIngredients([])}>
-                {t.dismiss}
-              </button>
             </div>
             <div className="suggestion-chips">
-              {suggestedIngredients.map((ingredient, index) => (
-                <button
-                  key={index}
-                  className="suggestion-chip"
-                  onClick={() => {
-                    onAddIngredient(ingredient);
-                    setSuggestedIngredients((prev) => prev.filter((i) => i !== ingredient));
-                  }}
-                >
-                  + {ingredient}
-                </button>
+              {suggestions.map((s) => (
+                <button key={s} className="suggestion-chip" onClick={() => addSuggestion(s)}>+ {s}</button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Premium upsell for AI — free users only, only when meal is set */}
-        {!isPremium && meal && ingredients.length === 0 && (
-          <button className="premium-gate" onClick={openPaywall}>
-            <span className="premium-gate__icon">✨</span>
-            <div className="premium-gate__text">
-              <p className="premium-gate__label">AI ingredient suggestions</p>
-              <p className="premium-gate__sub">Upgrade to Premium</p>
-            </div>
-            <Lock size={14} className="premium-gate__arrow" />
-          </button>
+        {!readOnly && meal.trim() && !editing && !loadingAI && suggestions.length === 0 && (
+          isPremium ? (
+            ingredients.length === 0 && (
+              <button className="ai-suggest-btn" onClick={() => fetchSuggestions(meal)}>
+                <Sparkles size={12} /> {t.suggest}
+              </button>
+            )
+          ) : (
+            ingredients.length === 0 && (
+              <button className="premium-gate" onClick={openPaywall}>
+                <span className="premium-gate__icon" aria-hidden>✨</span>
+                <span className="premium-gate__text">
+                  <span className="premium-gate__label">{t.aiUpsellTitle}</span>
+                  <span className="premium-gate__sub">{t.aiUpsellSub}</span>
+                </span>
+                <Lock size={14} className="premium-gate__arrow" />
+              </button>
+            )
+          )
         )}
 
-        {/* Ingredients */}
         {ingredients.length > 0 && (
-          <div className="ingredient-list">
-            {ingredients.map((ingredient) => (
-              <div key={ingredient.id} className="ingredient-row">
+          <ul className="ingredient-list">
+            {ingredients.map((ing) => (
+              <li key={ing.id} className="ingredient-row">
                 <button
-                  className={`ingredient-check${ingredient.checked ? " is-checked" : ""}`}
-                  onClick={() => onToggleIngredient(ingredient.id)}
-                />
-                <span className={`ingredient-name${ingredient.checked ? " is-checked" : ""}`}>
-                  {ingredient.name}
-                </span>
-                <button
-                  className="ingredient-delete"
-                  onClick={() => onDeleteIngredient(ingredient.id)}
+                  className={`ingredient-toggle${ing.checked ? " is-checked" : ""}`}
+                  onClick={() => { haptic.tap(); onToggle(ing.id); }}
+                  aria-pressed={ing.checked}
+                  disabled={readOnly}
                 >
-                  <Trash2 size={13} />
+                  <span className={`ingredient-check${ing.checked ? " is-checked" : ""}`} aria-hidden />
+                  <span className={`ingredient-name${ing.checked ? " is-checked" : ""}`}>{ing.name}</span>
                 </button>
-              </div>
+                {!readOnly && (
+                  <button
+                    className="ingredient-delete"
+                    onClick={() => onDelete(ing.id)}
+                    aria-label={t.deleteIngredient.replace("{name}", ing.name)}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </li>
             ))}
+          </ul>
+        )}
+
+        {!readOnly && (
+          <div className="add-row">
+            <input
+              type="text"
+              placeholder={t.addIngredient}
+              value={newIngredient}
+              maxLength={120}
+              enterKeyHint="enter"
+              autoComplete="off"
+              onChange={(e) => setNewIngredient(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") addIngredient(); }}
+            />
+            <button onClick={addIngredient} aria-label={t.addIngredient} disabled={!newIngredient.trim()}>
+              <Plus size={14} strokeWidth={2.5} />
+            </button>
           </div>
         )}
-
-        <div className="add-row">
-          <input
-            type="text"
-            placeholder={t.addIngredient}
-            value={newIngredient}
-            onChange={(e) => setNewIngredient(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleAddIngredient()}
-          />
-          <button onClick={handleAddIngredient}>
-            <Plus size={14} strokeWidth={2.5} />
-          </button>
-        </div>
-
       </div>
-    </div>
+    </section>
   );
 };
 
-export default DayCard;
+export default memo(DayCard);

@@ -1,40 +1,30 @@
-import { LocalNotifications } from '@capacitor/local-notifications';
+import { Capacitor } from "@capacitor/core";
+import { LocalNotifications, Weekday } from "@capacitor/local-notifications";
 
-export const requestNotificationPermission = async () => {
-  const { display } = await LocalNotifications.requestPermissions();
-  return display === 'granted';
-};
+const REMINDER_ID = 1;
 
-export const scheduleMondayReminder = async () => {
-  const granted = await requestNotificationPermission();
-  if (!granted) return false;
+/** Schedules the weekly Monday 09:00 reminder. Returns false if the user said no. */
+export async function scheduleMondayReminder(title: string, body: string): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  let { display } = await LocalNotifications.checkPermissions();
+  if (display === "prompt" || display === "prompt-with-rationale") {
+    ({ display } = await LocalNotifications.requestPermissions());
+  }
+  if (display !== "granted") return false;
 
-  await LocalNotifications.cancel({ notifications: [{ id: 1 }] });
-
+  await LocalNotifications.cancel({ notifications: [{ id: REMINDER_ID }] });
   await LocalNotifications.schedule({
-    notifications: [
-      {
-        id: 1,
-        title: "Plan your week 🍽️",
-        body: "What's on the menu this week? Tap to plan your meals.",
-        schedule: {
-          on: {
-            weekday: 2,
-            hour: 9,
-            minute: 0,
-          },
-          repeats: true,
-        },
-        sound: undefined,
-        actionTypeId: "",
-        extra: null,
-      },
-    ],
+    notifications: [{
+      id: REMINDER_ID,
+      title,
+      body,
+      schedule: { on: { weekday: Weekday.Monday, hour: 9, minute: 0 } }, // repeats weekly
+    }],
   });
-
   return true;
-};
+}
 
-export const cancelMondayReminder = async () => {
-  await LocalNotifications.cancel({ notifications: [{ id: 1 }] });
-};
+export async function cancelMondayReminder(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  await LocalNotifications.cancel({ notifications: [{ id: REMINDER_ID }] });
+}

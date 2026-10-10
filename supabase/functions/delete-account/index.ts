@@ -1,35 +1,42 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+// POST /functions/v1/delete-account
+// Permanently deletes the caller: family membership (ownership is handed to
+// another member, or the family is removed if empty), app data, the
+// RevenueCat customer record and finally the auth user.
+// Note: an App Store subscription can only be cancelled by the user in iOS
+// Settings — the app tells them so before they delete.
+import { adminClient, json, preflight, requireUser } from "../_shared/http.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+  const early = preflight(req);
+  if (early) return early;
+
+  const auth = await requireUser(req);
+  if (auth instanceof Response) return auth;
+  const { user } = auth;
+  const admin = adminClient();
+
+  const { error: dataError } = await admin.rpc("delete_user_data", { p_user_id: user.id });
+  if (dataError) {
+    console.error("delete-account: delete_user_data failed", dataError);
+    return json({ error: "delete_failed" }, 500);
   }
 
-  const authHeader = req.headers.get('Authorization')
-  if (!authHeader) {
-    return new Response('Unauthorized', { status: 401, headers: corsHeaders })
+  const rcKey = Deno.env.get("REVENUECAT_SECRET_KEY");
+  if (rcKey) {
+    try {
+      await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(user.id)}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${rcKey}` },
+      });
+    } catch (e) {
+      console.warn("delete-account: RevenueCat delete failed (continuing)", e);
+    }
   }
 
-  const anonClient = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } }
-  )
-  const { data: { user } } = await anonClient.auth.getUser()
-  if (!user) return new Response('Unauthorized', { status: 401, headers: corsHeaders })
-
-  const adminClient = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  )
-  const { error } = await adminClient.auth.admin.deleteUser(user.id)
-
-  return new Response(JSON.stringify({ error }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  })
-})
+  const { error } = await admin.auth.admin.deleteUser(user.id);
+  if (error) {
+    console.error("delete-account: deleteUser failed", error);
+    return json({ error: "delete_failed" }, 500);
+  }
+  return json({ ok: true });
+});

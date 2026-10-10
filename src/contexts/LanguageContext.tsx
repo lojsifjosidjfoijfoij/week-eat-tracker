@@ -1,40 +1,46 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Language, translations } from '@/lib/translations';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { detectLanguage, fmt, LANGUAGES, translations, type Language, type Strings } from "@/lib/i18n";
+import { safeLocal } from "@/lib/storage";
 
-interface LanguageContextType {
+const STORAGE_KEY = "mealweek-language";
+
+type LanguageContextType = {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: typeof translations.en & { languageCode: Language };
-}
+  t: Strings;
+  f: (text: string, vars: Record<string, string | number>) => string;
+  days: string[];
+};
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-const STORAGE_KEY = 'mealweek-language';
+const LanguageContext = createContext<LanguageContextType | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return (stored as Language) || 'en';
+    const stored = safeLocal.get(STORAGE_KEY);
+    return stored && (LANGUAGES as string[]).includes(stored) ? (stored as Language) : detectLanguage();
   });
 
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    localStorage.setItem(STORAGE_KEY, lang);
-  };
+  useEffect(() => { document.documentElement.lang = language; }, [language]);
 
-  const t = { ...translations[language], languageCode: language };
+  const value = useMemo<LanguageContextType>(() => {
+    const t = translations[language];
+    return {
+      language,
+      setLanguage: (lang) => {
+        setLanguageState(lang);
+        safeLocal.set(STORAGE_KEY, lang);
+      },
+      t,
+      f: fmt,
+      days: [t.monday, t.tuesday, t.wednesday, t.thursday, t.friday, t.saturday, t.sunday],
+    };
+  }, [language]);
 
-  return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
-      {children}
-    </LanguageContext.Provider>
-  );
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
 export function useLanguage() {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within LanguageProvider');
-  }
-  return context;
+  const ctx = useContext(LanguageContext);
+  if (!ctx) throw new Error("useLanguage must be used within LanguageProvider");
+  return ctx;
 }

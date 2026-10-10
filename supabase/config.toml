@@ -1,4 +1,16 @@
-project_id = "qjubarjjubosogweueia"
+project_id = "exfsipwxedgvlhsmfrub"
 
+# All functions verify the user's token themselves (works with both the legacy
+# JWT secret and the new signing keys). The webhook is called by RevenueCat
+# and checks its own shared secret instead.
 [functions.suggest-ingredients]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
+
+[functions.sync-premium]
+verify_jwt = false
+
+[functions.revenuecat-webhook]
 verify_jwt = false

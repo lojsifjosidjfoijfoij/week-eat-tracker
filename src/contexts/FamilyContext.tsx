@@ -1,216 +1,139 @@
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/contexts/AuthContext'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { App } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
+import { useAuth } from "@/contexts/AuthContext";
+import { rpc, supabase } from "@/lib/supabase";
+import { safeLocal } from "@/lib/storage";
+import { moveLocalPlanIntoFamily } from "@/lib/useWeekPlan";
 
-export interface FamilyMember {
-  user_id: string
-  email: string | null
-}
+export type Family = { id: string; name: string; code: string; owner_id: string };
+export type FamilyMember = { user_id: string; email: string | null; name: string | null; is_owner: boolean };
+export type FamilyResult = { ok: true } | { ok: false; error: string };
 
-interface FamilyContextType {
-  familyId: string | null
-  familyCode: string | null
-  familyName: string | null
-  ownerId: string | null
-  isOwner: boolean
-  members: FamilyMember[]
-  joinFamily: (code: string) => Promise<boolean>
-  createFamily: (name: string) => Promise<string>
-  leaveFamily: () => Promise<void>
-  kickMember: (userId: string) => Promise<void>
-}
+type FamilyContextType = {
+  family: Family | null;
+  familyId: string | null;
+  members: FamilyMember[];
+  isOwner: boolean;
+  /** false until the server has answered at least once (cached data may be shown before) */
+  loaded: boolean;
+  refresh: () => Promise<void>;
+  createFamily: (name: string) => Promise<FamilyResult & { code?: string }>;
+  joinFamily: (code: string) => Promise<FamilyResult & { name?: string }>;
+  leaveFamily: () => Promise<FamilyResult>;
+  removeMember: (userId: string) => Promise<FamilyResult>;
+  regenerateCode: () => Promise<FamilyResult>;
+};
 
-const FamilyContext = createContext<FamilyContextType | null>(null)
+const FamilyContext = createContext<FamilyContextType | null>(null);
+
+type Cached = { family: Family | null; members: FamilyMember[] };
 
 export const FamilyProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth()
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+  const cacheKey = userId ? `dinrr:family:${userId}` : null;
 
-  const [familyId, setFamilyId] = useState<string | null>(null)
-  const [familyCode, setFamilyCode] = useState<string | null>(null)
-  const [familyName, setFamilyName] = useState<string | null>(null)
-  const [ownerId, setOwnerId] = useState<string | null>(null)
-  const [members, setMembers] = useState<FamilyMember[]>([])
+  const [state, setState] = useState<Cached>(() =>
+    cacheKey ? safeLocal.getJSON<Cached>(cacheKey, { family: null, members: [] }) : { family: null, members: [] },
+  );
+  const [loaded, setLoaded] = useState(false);
+  const loadSeq = useRef(0);
 
-  // Prevents clearing state on first render while auth is still loading
-  const didInit = useRef(false)
+  const apply = useCallback((next: Cached) => {
+    setState(next);
+    if (cacheKey) safeLocal.setJSON(cacheKey, next);
+  }, [cacheKey]);
 
-  const isOwner = !!(ownerId && user && ownerId === user.id)
-
-  // Reload family from Supabase whenever the authenticated user changes.
-  // This prevents one account from inheriting another account's family via localStorage.
-  useEffect(() => {
-    if (!user) {
-      if (didInit.current) clearFamily()
-      return
-    }
-    didInit.current = true
-    loadFamilyForUser(user.id)
-  }, [user?.id])
-
-  const clearFamily = () => {
-    setFamilyId(null)
-    setFamilyCode(null)
-    setFamilyName(null)
-    setOwnerId(null)
-    setMembers([])
-    localStorage.removeItem('familyId')
-    localStorage.removeItem('familyCode')
-    localStorage.removeItem('familyName')
-  }
-
-  const loadFamilyForUser = async (userId: string) => {
-    const { data: memberRow } = await supabase
-      .from('family_members')
-      .select('family_id')
-      .eq('user_id', userId)
-      .maybeSingle()
-
-    if (!memberRow?.family_id) {
-      clearFamily()
-      return
-    }
-
-    const { data: family } = await supabase
-      .from('families')
-      .select('id, name, code, owner_id')
-      .eq('id', memberRow.family_id)
-      .single()
-
-    if (!family) {
-      clearFamily()
-      return
-    }
-
-    setFamilyId(family.id)
-    setFamilyCode(family.code)
-    setFamilyName(family.name)
-    setOwnerId(family.owner_id)
-    localStorage.setItem('familyId', family.id)
-    localStorage.setItem('familyCode', family.code)
-    localStorage.setItem('familyName', family.name)
-
-    if (family.owner_id === userId) {
-      loadMembers(family.id)
-    }
-  }
-
-  const loadMembers = async (fid: string) => {
-    // Try selecting email column; gracefully fall back if it doesn't exist yet
-    const { data, error } = await supabase
-      .from('family_members')
-      .select('user_id, email')
-      .eq('family_id', fid)
-
-    if (error) {
-      const { data: fallback } = await supabase
-        .from('family_members')
-        .select('user_id')
-        .eq('family_id', fid)
-      setMembers(fallback?.map(m => ({ user_id: m.user_id, email: null })) ?? [])
+  const refresh = useCallback(async () => {
+    if (!userId) return;
+    const seq = ++loadSeq.current;
+    const res = await rpc<{ family: Family | null; members: FamilyMember[] }>("get_my_family");
+    if (seq !== loadSeq.current) return; // a newer load started
+    if (res.ok) {
+      apply({ family: res.family ?? null, members: res.members ?? [] });
+      setLoaded(true);
     } else {
-      setMembers(data?.map(m => ({ user_id: m.user_id, email: m.email ?? null })) ?? [])
+      console.warn("get_my_family failed:", res.error);
     }
-  }
+  }, [userId, apply]);
 
-  const createFamily = async (name: string): Promise<string> => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) throw new Error('No session')
+  // The provider is remounted for every account (key in App.tsx), so a
+  // family can never leak from one user to the next.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async: state is only set after the network call
+    if (userId) refresh();
+  }, [userId, refresh]);
 
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
-    const { data, error } = await supabase
-      .from('families')
-      .insert({ name, code, owner_id: session.user.id })
-      .select()
-      .single()
-    if (error) throw error
-
-    // Try with email column; fall back without if the column doesn't exist yet
-    const { error: memErr } = await supabase
-      .from('family_members')
-      .insert({ family_id: data.id, user_id: session.user.id, email: session.user.email })
-    if (memErr) {
-      const { error: fallbackErr } = await supabase
-        .from('family_members')
-        .insert({ family_id: data.id, user_id: session.user.id })
-      if (fallbackErr) throw fallbackErr
+  // Live updates: someone joins/leaves, the family is renamed, or I'm removed
+  const familyId = state.family?.id ?? null;
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase.channel(`family-meta:${userId}`);
+    channel.on("postgres_changes", { event: "*", schema: "public", table: "family_members", filter: `user_id=eq.${userId}` }, () => refresh());
+    if (familyId) {
+      channel
+        .on("postgres_changes", { event: "*", schema: "public", table: "family_members", filter: `family_id=eq.${familyId}` }, () => refresh())
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "families", filter: `id=eq.${familyId}` }, () => refresh());
     }
+    channel.subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, familyId, refresh]);
 
-    setFamilyId(data.id)
-    setFamilyCode(data.code)
-    setFamilyName(data.name)
-    setOwnerId(session.user.id)
-    localStorage.setItem('familyId', data.id)
-    localStorage.setItem('familyCode', data.code)
-    localStorage.setItem('familyName', data.name)
-    await loadMembers(data.id)
-    return data.code
-  }
+  // Coming back to the app: re-check (covers missed realtime events)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !userId) return;
+    const l = App.addListener("resume", () => refresh());
+    return () => { l.then((h) => h.remove()); };
+  }, [userId, refresh]);
 
-  const joinFamily = async (code: string): Promise<boolean> => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return false
+  const value = useMemo<FamilyContextType>(() => ({
+    family: state.family,
+    familyId,
+    members: state.members,
+    isOwner: !!state.family && state.family.owner_id === userId,
+    loaded,
+    refresh,
 
-    const { data, error } = await supabase
-      .from('families')
-      .select()
-      .eq('code', code.toUpperCase())
-      .single()
-    if (error || !data) return false
+    createFamily: async (name) => {
+      const res = await rpc<{ family: Family }>("create_family", { p_name: name });
+      if (!res.ok) return res;
+      if (userId) await moveLocalPlanIntoFamily(userId, res.family.id);
+      await refresh();
+      return { ok: true, code: res.family.code };
+    },
 
-    const { error: memErr } = await supabase
-      .from('family_members')
-      .insert({ family_id: data.id, user_id: session.user.id, email: session.user.email })
-    if (memErr && !memErr.message.includes('duplicate')) {
-      const { error: fallbackErr } = await supabase
-        .from('family_members')
-        .insert({ family_id: data.id, user_id: session.user.id })
-      if (fallbackErr && !fallbackErr.message.includes('duplicate')) return false
-    }
+    joinFamily: async (code) => {
+      const res = await rpc<{ family: Family }>("join_family", { p_code: code });
+      if (!res.ok) return res;
+      await refresh();
+      return { ok: true, name: res.family.name };
+    },
 
-    setFamilyId(data.id)
-    setFamilyCode(data.code)
-    setFamilyName(data.name)
-    setOwnerId(data.owner_id)
-    localStorage.setItem('familyId', data.id)
-    localStorage.setItem('familyCode', data.code)
-    localStorage.setItem('familyName', data.name)
-    return true
-  }
+    leaveFamily: async () => {
+      const res = await rpc("leave_family");
+      if (res.ok) apply({ family: null, members: [] });
+      return res.ok ? { ok: true } : res;
+    },
 
-  const leaveFamily = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session && familyId) {
-      await supabase
-        .from('family_members')
-        .delete()
-        .eq('family_id', familyId)
-        .eq('user_id', session.user.id)
-    }
-    clearFamily()
-  }
+    removeMember: async (memberId) => {
+      const res = await rpc("remove_family_member", { p_user_id: memberId });
+      if (res.ok) await refresh();
+      return res.ok ? { ok: true } : res;
+    },
 
-  const kickMember = async (userId: string) => {
-    if (!familyId) return
-    await supabase
-      .from('family_members')
-      .delete()
-      .eq('family_id', familyId)
-      .eq('user_id', userId)
-    setMembers(prev => prev.filter(m => m.user_id !== userId))
-  }
+    regenerateCode: async () => {
+      const res = await rpc("regenerate_family_code");
+      if (res.ok) await refresh();
+      return res.ok ? { ok: true } : res;
+    },
+  }), [state, familyId, userId, loaded, refresh, apply]);
 
-  return (
-    <FamilyContext.Provider value={{
-      familyId, familyCode, familyName, ownerId, isOwner, members,
-      joinFamily, createFamily, leaveFamily, kickMember,
-    }}>
-      {children}
-    </FamilyContext.Provider>
-  )
-}
+  return <FamilyContext.Provider value={value}>{children}</FamilyContext.Provider>;
+};
 
 export const useFamily = () => {
-  const ctx = useContext(FamilyContext)
-  if (!ctx) throw new Error('useFamily must be used within FamilyProvider')
-  return ctx
-}
+  const ctx = useContext(FamilyContext);
+  if (!ctx) throw new Error("useFamily must be used within FamilyProvider");
+  return ctx;
+};

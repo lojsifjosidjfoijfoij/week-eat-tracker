@@ -1,191 +1,252 @@
-import { useState, useEffect } from "react";
-import { X, Check, Sparkles, Users, ShoppingCart, Zap } from "lucide-react";
-import { Purchases } from "@revenuecat/purchases-capacitor";
+import { useEffect, useState } from "react";
+import { Check, ShoppingCart, Sparkles, Users, X, Zap } from "lucide-react";
+import type { PurchasesPackage } from "@revenuecat/purchases-capacitor";
 import { usePremium } from "@/contexts/PremiumContext";
-import { useToast } from "@/hooks/use-toast";
-import { safeGetOfferings } from "@/lib/revenuecat";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/contexts/ToastContext";
+import { LINKS } from "@/config";
+import { haptic } from "@/lib/haptics";
+import {
+  classifyStoreError,
+  hasEntitlement,
+  loadPlans,
+  purchase,
+  restore,
+  storeAvailable,
+  type Plans,
+  type StoreErrorKind,
+} from "@/lib/revenuecat";
 
-const FEATURES_FREE = [
-  { icon: <ShoppingCart size={16} />, text: "Weekly meal planning" },
-  { icon: <Check size={16} />, text: "Shopping list" },
-  { icon: <Check size={16} />, text: "Manual ingredients" },
-];
+type PlanKey = "yearly" | "monthly";
 
-const FEATURES_PREMIUM = [
-  { icon: <Users size={16} />, text: "Family sharing" },
-  { icon: <Sparkles size={16} />, text: "AI ingredient suggestions" },
-  { icon: <Zap size={16} />, text: "Everything in free" },
-];
-
-type Plan = "monthly" | "yearly";
+function perMonth(pkg: PurchasesPackage | null, locale: string): string | null {
+  const p = pkg?.product;
+  if (!p?.price || !p.currencyCode) return null;
+  try {
+    return new Intl.NumberFormat(locale, { style: "currency", currency: p.currencyCode }).format(p.price / 12);
+  } catch {
+    return null;
+  }
+}
 
 const Paywall = ({ onClose }: { onClose: () => void }) => {
-  const [selectedPlan, setSelectedPlan] = useState<Plan>("yearly");
-  const [loading, setLoading] = useState(false);
-  const [packages, setPackages] = useState<{ annual: any; monthly: any } | null>(null);
-  const { restorePurchases } = usePremium();
-  const { toast } = useToast();
+  const { t, f, language } = useLanguage();
+  const { applyCustomerInfo, ownsSubscription } = usePremium();
+  const toast = useToast();
+
+  const [selected, setSelected] = useState<PlanKey>("yearly");
+  const [plans, setPlans] = useState<Plans | null>(null);
+  const [loadingPlans, setLoadingPlans] = useState(storeAvailable());
+  const [busy, setBusy] = useState<"buy" | "restore" | null>(null);
+  const [error, setError] = useState<{ kind: StoreErrorKind; detail: string } | null>(null);
+
+  const messageFor = (kind: StoreErrorKind): string => ({
+    cancelled: "",
+    notReady: t.storeNotReady,
+    notAllowed: t.purchaseNotAllowed,
+    pending: t.paymentPending,
+    network: t.networkError,
+    store: t.storeProblem,
+    alreadyOwned: t.alreadyPremium,
+    unknown: t.purchaseFailed,
+  })[kind];
+
+  const loadInto = () =>
+    loadPlans()
+      .then((p) => {
+        setPlans(p);
+        if (!p.yearly && !p.monthly) setError({ kind: "notReady", detail: "No packages in the current offering" });
+        else if (!p.yearly) setSelected("monthly");
+      })
+      .catch((e) => setError(classifyStoreError(e)))
+      .finally(() => setLoadingPlans(false));
+
+  const fetchPlans = () => {
+    if (!storeAvailable()) return;
+    setLoadingPlans(true);
+    setError(null);
+    loadInto();
+  };
 
   useEffect(() => {
-    safeGetOfferings()
-      .then((offerings) => {
-        const current = offerings.current;
-        if (current) setPackages({ annual: current.annual, monthly: current.monthly });
-      })
-      .catch((e) => console.log("Failed to fetch offerings:", e));
-  }, []);
+    if (storeAvailable()) loadInto();
+  }, []); // load once when the paywall opens
 
-  const yearlyPkg = packages?.annual;
-  const monthlyPkg = packages?.monthly;
-  const yearlyPrice = yearlyPkg?.product?.priceString ?? "€29.99";
-  const monthlyPrice = monthlyPkg?.product?.priceString ?? "€3.99";
-  const yearlyPerMonth = yearlyPkg?.product?.price
-    ? (() => {
-        try {
-          return (
-            new Intl.NumberFormat(undefined, {
-              style: "currency",
-              currency: yearlyPkg.product.currencyCode,
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(yearlyPkg.product.price / 12) + " / month"
-          );
-        } catch {
-          return `${(yearlyPkg.product.price / 12).toFixed(2)} / month`;
-        }
-      })()
-    : "€2.50 / month";
+  // Close with Escape (simulator / keyboard)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
-  const handleSubscribe = async () => {
-    setLoading(true);
+  const pkg = plans?.[selected] ?? null;
+  const yearlyPrice = plans?.yearly?.product.priceString;
+  const monthlyPrice = plans?.monthly?.product.priceString;
+  const yearlyMonthly = perMonth(plans?.yearly ?? null, language);
+
+  const handleBuy = async () => {
+    if (!pkg) {
+      fetchPlans();
+      return;
+    }
+    setBusy("buy");
+    setError(null);
     try {
-      const offerings = await safeGetOfferings();
-      const current = offerings.current;
-
-      if (!current) {
-        toast({ title: "No offerings", description: "Current offering is null", variant: "destructive" });
+      const info = await purchase(pkg);
+      applyCustomerInfo(info);
+      if (hasEntitlement(info)) {
+        haptic.success();
+        toast({ title: t.welcomePremium, description: t.premiumActive, variant: "success" });
+        onClose();
+      }
+    } catch (e) {
+      const err = classifyStoreError(e);
+      console.warn("Purchase failed", err.detail);
+      if (err.kind === "alreadyOwned") {
+        await handleRestore();
         return;
       }
-
-      const pkg = selectedPlan === "yearly" ? current.annual : current.monthly;
-
-      if (!pkg) {
-        toast({ title: "No package", description: `${selectedPlan} package not found`, variant: "destructive" });
-        return;
-      }
-
-      await Purchases.purchasePackage({ aPackage: pkg });
-      await restorePurchases(); // refresh isPremium state immediately
-      toast({ title: "Welcome to dinrr+!", description: "Your subscription is now active." });
-      onClose();
-    } catch (e: any) {
-      console.log("Purchase error:", JSON.stringify(e));
-      if (e?.userCancelled) return;
-      toast({ title: "Purchase failed", description: e?.message || JSON.stringify(e), variant: "destructive" });
+      if (err.kind !== "cancelled") setError(err);
     } finally {
-      setLoading(false);
+      setBusy(null);
     }
   };
 
   const handleRestore = async () => {
-    await restorePurchases();
-    toast({ title: "Purchases restored" });
+    if (!storeAvailable()) {
+      setError({ kind: "notReady", detail: "" });
+      return;
+    }
+    setBusy("restore");
+    setError(null);
+    try {
+      const info = await restore();
+      applyCustomerInfo(info);
+      if (hasEntitlement(info)) {
+        haptic.success();
+        toast({ title: t.restored, variant: "success" });
+        onClose();
+      } else {
+        toast({ title: t.nothingToRestore });
+      }
+    } catch (e) {
+      const err = classifyStoreError(e);
+      if (err.kind !== "cancelled") setError(err);
+    } finally {
+      setBusy(null);
+    }
   };
 
-  return (
-    <div className="paywall">
+  const features = {
+    free: [
+      { icon: <ShoppingCart size={16} />, text: t.featWeekly },
+      { icon: <Check size={16} />, text: t.featShopping },
+      { icon: <Check size={16} />, text: t.featManual },
+    ],
+    premium: [
+      { icon: <Users size={16} />, text: t.featFamily },
+      { icon: <Sparkles size={16} />, text: t.featAI },
+      { icon: <Zap size={16} />, text: t.featEverything },
+    ],
+  };
 
-      {/* Close */}
-      <button className="paywall__close" onClick={onClose} aria-label="Close">
+  const planLabel = selected === "yearly" ? t.yearly : t.monthly;
+  const ctaDisabled = !!busy || loadingPlans || ownsSubscription || (!!plans && !pkg);
+
+  return (
+    <div className="paywall" role="dialog" aria-modal="true" aria-label="dinrr+">
+      <button className="paywall__close" onClick={onClose} aria-label={t.close}>
         <X size={16} strokeWidth={2} />
       </button>
 
-      {/* Hero */}
       <div className="paywall__hero">
-        <div className="paywall__icon">🍽️</div>
+        <div className="paywall__icon" aria-hidden>🍽️</div>
         <h2 className="paywall__title">dinrr+</h2>
-        <p className="paywall__subtitle">Plan meals together as a family</p>
+        <p className="paywall__subtitle">{t.paywallSubtitle}</p>
       </div>
 
-      {/* Features comparison */}
       <div className="paywall__features">
         <div className="paywall__col">
-          <p className="paywall__col-label">Free</p>
-          {FEATURES_FREE.map((f, i) => (
-            <div key={i} className="paywall__feature paywall__feature--free">
-              <span className="paywall__feature-icon">{f.icon}</span>
-              <span>{f.text}</span>
+          <p className="paywall__col-label">{t.planFree}</p>
+          {features.free.map((x) => (
+            <div key={x.text} className="paywall__feature paywall__feature--free">
+              <span className="paywall__feature-icon">{x.icon}</span>
+              <span>{x.text}</span>
             </div>
           ))}
         </div>
         <div className="paywall__col paywall__col--premium">
-          <p className="paywall__col-label">Premium</p>
-          {FEATURES_PREMIUM.map((f, i) => (
-            <div key={i} className="paywall__feature">
-              <span className="paywall__feature-icon">{f.icon}</span>
-              <span>{f.text}</span>
+          <p className="paywall__col-label">{t.planPremium}</p>
+          {features.premium.map((x) => (
+            <div key={x.text} className="paywall__feature">
+              <span className="paywall__feature-icon">{x.icon}</span>
+              <span>{x.text}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Plan selector */}
-      <div className="paywall__plans">
-        <button
-          className={`paywall__plan${selectedPlan === "yearly" ? " is-selected" : ""}`}
-          onClick={() => setSelectedPlan("yearly")}
-        >
-          <div className="paywall__plan-badge">Best value</div>
-          <p className="paywall__plan-name">Yearly</p>
-          <p className="paywall__plan-price">{yearlyPrice}<span>/yr</span></p>
-          <p className="paywall__plan-sub">{yearlyPerMonth}</p>
-        </button>
-        <button
-          className={`paywall__plan${selectedPlan === "monthly" ? " is-selected" : ""}`}
-          onClick={() => setSelectedPlan("monthly")}
-        >
-          <p className="paywall__plan-name">Monthly</p>
-          <p className="paywall__plan-price">{monthlyPrice}<span>/mo</span></p>
-          <p className="paywall__plan-sub">Cancel anytime</p>
-        </button>
-      </div>
+      {storeAvailable() ? (
+        <div className="paywall__plans">
+          <button
+            className={`paywall__plan${selected === "yearly" ? " is-selected" : ""}`}
+            onClick={() => setSelected("yearly")}
+            disabled={!!plans && !plans.yearly}
+            aria-pressed={selected === "yearly"}
+          >
+            <span className="paywall__plan-badge">{t.bestValue}</span>
+            <span className="paywall__plan-name">{t.yearly}</span>
+            <span className="paywall__plan-price">
+              {yearlyPrice ?? (loadingPlans ? "…" : "—")}<span>{t.perYear}</span>
+            </span>
+            <span className="paywall__plan-sub">{yearlyMonthly ? f(t.perMonthLong, { price: yearlyMonthly }) : " "}</span>
+          </button>
+          <button
+            className={`paywall__plan${selected === "monthly" ? " is-selected" : ""}`}
+            onClick={() => setSelected("monthly")}
+            disabled={!!plans && !plans.monthly}
+            aria-pressed={selected === "monthly"}
+          >
+            <span className="paywall__plan-name">{t.monthly}</span>
+            <span className="paywall__plan-price">
+              {monthlyPrice ?? (loadingPlans ? "…" : "—")}<span>{t.perMonth}</span>
+            </span>
+            <span className="paywall__plan-sub">{t.cancelAnytime}</span>
+          </button>
+        </div>
+      ) : (
+        <p className="paywall__notice">{t.storeOnlyOnPhone}</p>
+      )}
 
-      {/* CTA */}
       <div className="paywall__footer">
-        <button
-          className="paywall__cta"
-          onClick={handleSubscribe}
-          disabled={loading}
-        >
-          {loading ? "Loading..." : `Get ${selectedPlan === "yearly" ? "Yearly" : "Monthly"}`}
+        {error && error.kind !== "cancelled" && (
+          <div className="paywall__error" role="alert">
+            <p>{messageFor(error.kind)}</p>
+            {error.detail && <p className="paywall__error-detail">{error.detail}</p>}
+          </div>
+        )}
+
+        {storeAvailable() && (
+          <button className="paywall__cta" onClick={handleBuy} disabled={ctaDisabled}>
+            {ownsSubscription
+              ? t.alreadyPremium
+              : busy === "buy"
+                ? t.loading
+                : loadingPlans
+                  ? t.loadingPrices
+                  : f(t.getPlan, { plan: planLabel })}
+          </button>
+        )}
+        <button className="paywall__restore" onClick={handleRestore} disabled={!!busy}>
+          {busy === "restore" ? t.loading : t.restorePurchases}
         </button>
-        <button className="paywall__restore" onClick={handleRestore}>
-          Restore purchases
-        </button>
-        <p className="paywall__legal">
-          Subscription renews automatically. Cancel anytime in Settings.
-        </p>
-        <p className="paywall__legal" style={{ marginTop: "6px" }}>
-          <a
-            href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "var(--ink-3)", textDecoration: "underline" }}
-          >
-            Terms of Use
-          </a>
+        <p className="paywall__legal">{t.legalAutoRenew}</p>
+        <p className="paywall__legal paywall__links">
+          <a href={LINKS.terms} target="_blank" rel="noreferrer">{t.termsOfUse}</a>
           {" · "}
-          <a
-            href="https://lojsifjosidjfoijfoij.github.io/dinrr-site/privacy.html"
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "var(--ink-3)", textDecoration: "underline" }}
-          >
-            Privacy Policy
-          </a>
+          <a href={LINKS.privacy} target="_blank" rel="noreferrer">{t.privacyPolicy}</a>
         </p>
       </div>
-
     </div>
   );
 };

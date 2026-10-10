@@ -1,136 +1,197 @@
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
+import { useAuth, type AuthErrorKind } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LINKS } from "@/config";
+
+type Mode = "signIn" | "signUp" | "reset";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Login = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const { t } = useLanguage();
+  const { signIn, signUp, requestPasswordReset, resendConfirmation, linkError, clearLinkError } = useAuth();
+
+  const [mode, setMode] = useState<Mode>("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const { signIn, signUp } = useAuth();
+  const [canResend, setCanResend] = useState(false);
 
-  const handleSubmit = async () => {
-    setError("");
-    setSuccess("");
-    if (!email || !password) {
-      setError("Please enter your email and password.");
-      return;
-    }
-    setLoading(true);
-    if (isSignUp) {
-      if (password.length < 6) {
-        setError("Password must be at least 6 characters.");
-        setLoading(false);
-        return;
-      }
-      const { error } = await signUp(email, password, fullName);
-      if (error) {
-        if (error.message.includes("already registered")) {
-          setError("Email already in use. Try signing in instead.");
-        } else {
-          setError(error.message);
-        }
-      } else {
-        setSuccess("Account created! Please check your email to confirm your account.");
-      }
-    } else {
-      const { error } = await signIn(email, password);
-      if (error) {
-        if (error.message.includes("Invalid login")) {
-          setError("Wrong email or password. Please check your details and try again.");
-        } else if (error.message.includes("Email not confirmed")) {
-          setError("Email not confirmed. Please check your inbox first.");
-        } else {
-          setError(error.message);
-        }
-      }
-    }
-    setLoading(false);
+  const messages: Record<AuthErrorKind, string> = {
+    wrongCredentials: t.errWrongCredentials,
+    emailNotConfirmed: t.errEmailNotConfirmed,
+    emailInUse: t.errEmailInUse,
+    tooManyAttempts: t.errTooManyAttempts,
+    weakPassword: t.errWeakPassword,
+    invalidEmail: t.errInvalidEmail,
+    linkExpired: t.linkExpired,
+    network: t.networkError,
+    unknown: t.genericError,
   };
 
-  return (
-    <div style={{
-      minHeight: "100dvh",
-      background: "var(--bg)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "24px",
-      paddingTop: "calc(env(safe-area-inset-top, 50px) + 24px)",
-      paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
-    }}>
-      <div style={{ width: "100%", maxWidth: "360px" }}>
+  const shownError = error || (linkError ? messages[linkError] : "");
 
-        <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          <h1 style={{
-            fontFamily: "var(--font-serif)",
-            fontStyle: "italic",
-            fontSize: "2.5rem",
-            color: "var(--ink)",
-            letterSpacing: "-0.02em",
-            marginBottom: "8px",
-          }}>dinrr</h1>
-          <p style={{ fontSize: "0.9rem", color: "var(--ink-3)", fontWeight: 300 }}>
-            {isSignUp ? "Create your account" : "Welcome back"}
-          </p>
+  const switchMode = (m: Mode) => {
+    clearLinkError();
+    setMode(m);
+    setError("");
+    setSuccess("");
+    setCanResend(false);
+  };
+
+  const submit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (loading) return;
+    clearLinkError();
+    setError("");
+    setSuccess("");
+
+    const cleanEmail = email.trim();
+    if (mode === "reset") {
+      if (!EMAIL_RE.test(cleanEmail)) return setError(cleanEmail ? t.errInvalidEmail : t.errEnterEmail);
+    } else {
+      if (!cleanEmail || !password) return setError(t.errEnterEmailPassword);
+      if (!EMAIL_RE.test(cleanEmail)) return setError(t.errInvalidEmail);
+      if (mode === "signUp" && password.length < 8) return setError(t.errPasswordShort);
+    }
+
+    setLoading(true);
+    try {
+      if (mode === "signIn") {
+        const res = await signIn(cleanEmail, password);
+        if (!res.ok) {
+          setError(messages[res.error]);
+          setCanResend(res.error === "emailNotConfirmed");
+        }
+      } else if (mode === "signUp") {
+        const res = await signUp(cleanEmail, password, fullName);
+        if (res.ok) {
+          setSuccess(t.accountCreated);
+          setCanResend(true);
+          setPassword("");
+        } else {
+          setError(messages[res.error]);
+        }
+      } else {
+        const res = await requestPasswordReset(cleanEmail);
+        // Same message whether or not the email exists (don't leak accounts)
+        if (res.ok || res.error === "unknown") setSuccess(t.resetLinkSent);
+        else setError(messages[res.error]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resend = async () => {
+    setLoading(true);
+    const res = await resendConfirmation(email);
+    setLoading(false);
+    if (res.ok) { setSuccess(t.emailResent); setError(""); }
+    else setError(messages[res.error]);
+  };
+
+  const title = mode === "signUp" ? t.createYourAccount : mode === "reset" ? t.resetPasswordTitle : t.welcomeBack;
+  const cta = mode === "signUp" ? t.createAccount : mode === "reset" ? t.sendResetLink : t.signIn;
+
+  return (
+    <div className="auth-screen">
+      <form className="auth-card" onSubmit={submit} noValidate>
+        <div className="auth-brand">
+          <h1>dinrr</h1>
+          <p>{title}</p>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {isSignUp && (
+        {mode === "reset" && <p className="auth-hint">{t.resetPasswordHint}</p>}
+
+        <div className="auth-fields">
+          {mode === "signUp" && (
             <input
               className="settings-input"
-              placeholder="Full name"
+              placeholder={t.fullName}
               value={fullName}
+              autoComplete="name"
+              autoCapitalize="words"
+              maxLength={80}
               onChange={(e) => setFullName(e.target.value)}
             />
           )}
           <input
             className="settings-input"
             type="email"
-            placeholder="Email"
+            inputMode="email"
+            placeholder={t.email}
             value={email}
+            autoComplete={mode === "signUp" ? "email" : "username"}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             onChange={(e) => setEmail(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSubmit()}
           />
-          <input
-            className="settings-input"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSubmit()}
-          />
-
-          {error && (
-            <p style={{ fontSize: "0.825rem", color: "var(--red)", textAlign: "center" }}>{error}</p>
+          {mode !== "reset" && (
+            <div className="password-field">
+              <input
+                className="settings-input"
+                type={showPassword ? "text" : "password"}
+                placeholder={t.password}
+                value={password}
+                autoComplete={mode === "signUp" ? "new-password" : "current-password"}
+                autoCapitalize="none"
+                autoCorrect="off"
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="password-field__toggle"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? t.hidePassword : t.showPassword}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           )}
-          {success && (
-            <p style={{ fontSize: "0.825rem", color: "var(--green)", textAlign: "center" }}>{success}</p>
-          )}
 
-          <button
-            className="settings-btn"
-            onClick={handleSubmit}
-            disabled={loading}
-            style={{ marginTop: "4px" }}
-          >
-            {loading ? "Loading..." : isSignUp ? "Create account" : "Sign in"}
+          {shownError && <p className="form-error" role="alert">{shownError}</p>}
+          {success && <p className="form-success" role="status">{success}</p>}
+
+          <button className="settings-btn" type="submit" disabled={loading}>
+            {loading ? t.loading : cta}
           </button>
+
+          {canResend && mode !== "reset" && (
+            <button type="button" className="btn-text" onClick={resend} disabled={loading}>{t.resendEmail}</button>
+          )}
+          {mode === "signIn" && (
+            <button type="button" className="btn-text" onClick={() => switchMode("reset")}>{t.forgotPassword}</button>
+          )}
         </div>
 
-        <p style={{ textAlign: "center", fontSize: "0.875rem", color: "var(--ink-3)", marginTop: "24px" }}>
-          {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-          <button
-            onClick={() => { setIsSignUp(!isSignUp); setError(""); setSuccess(""); }}
-            style={{ color: "var(--ink)", fontWeight: 600, background: "none", border: "none", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "3px" }}
-          >
-            {isSignUp ? "Sign in" : "Sign up"}
-          </button>
-        </p>
+        {mode === "signUp" && (
+          <p className="auth-legal">
+            {t.legalPrefix}{" "}
+            <a href={LINKS.terms} target="_blank" rel="noreferrer">{t.termsOfUse}</a>{" "}
+            {t.and}{" "}
+            <a href={LINKS.privacy} target="_blank" rel="noreferrer">{t.privacyPolicy}</a>.
+          </p>
+        )}
 
-      </div>
+        <p className="auth-switch">
+          {mode === "reset" ? (
+            <button type="button" onClick={() => switchMode("signIn")}>{t.backToSignIn}</button>
+          ) : (
+            <>
+              {mode === "signUp" ? t.haveAccount : t.noAccount}{" "}
+              <button type="button" onClick={() => switchMode(mode === "signUp" ? "signIn" : "signUp")}>
+                {mode === "signUp" ? t.signIn : t.signUp}
+              </button>
+            </>
+          )}
+        </p>
+      </form>
     </div>
   );
 };

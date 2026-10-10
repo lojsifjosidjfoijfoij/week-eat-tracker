@@ -1,48 +1,23 @@
 import UIKit
 import Capacitor
-import WidgetKit
-import RevenueCat
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+    // RevenueCat is configured from JavaScript (src/lib/revenuecat.ts) with the
+    // signed-in user's id. Do NOT call Purchases.configure here as well — two
+    // configurations create two StoreKit observers and break purchases.
+    //
+    // The home-screen widget is updated by SharedStoragePlugin whenever the
+    // plan changes, so nothing needs to be copied here on launch.
+
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-
-        Purchases.configure(withAPIKey: "appl_gfCpjApFkaldDDRWMNsILWpAxdu")
-
         return true
-    }
-
-    func applicationWillResignActive(_ application: UIApplication) {}
-
-    func applicationDidEnterBackground(_ application: UIApplication) {}
-
-    func applicationWillEnterForeground(_ application: UIApplication) {}
-
-    func applicationDidBecomeActive(_ application: UIApplication) {
-        syncMealDataToWidget()
-    }
-
-    func applicationWillTerminate(_ application: UIApplication) {}
-
-    func syncMealDataToWidget() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            guard let bridge = (self.window?.rootViewController as? CAPBridgeViewController)?.bridge else { return }
-
-            bridge.webView?.evaluateJavaScript("localStorage.getItem('mealWeekPlanner')") { result, error in
-                if let data = result as? String {
-                    let sharedDefaults = UserDefaults(suiteName: "group.com.louis.dinrr")
-                    sharedDefaults?.set(data, forKey: "mealWeekPlanner")
-                    sharedDefaults?.synchronize()
-                    WidgetCenter.shared.reloadAllTimelines()
-                }
-            }
-        }
     }
 
     func application(

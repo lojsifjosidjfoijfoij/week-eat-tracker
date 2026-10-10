@@ -1,18 +1,24 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import path from "path";
-import { componentTagger } from "lovable-tagger";
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import path from "node:path";
+import { readFileSync } from "node:fs";
 
-// https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-  },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
+
+export default defineConfig({
+  server: { host: true, port: 8080 },
+  plugins: [react()],
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+    alias: { "@": path.resolve(import.meta.dirname, "./src") },
   },
-}));
+  build: {
+    target: "safari15",
+    sourcemap: false,
+    chunkSizeWarningLimit: 700, // one bundle is right for an app loaded from disk
+  },
+  test: {
+    environment: "node",
+    include: ["src/**/*.test.ts"],
+  },
+});
