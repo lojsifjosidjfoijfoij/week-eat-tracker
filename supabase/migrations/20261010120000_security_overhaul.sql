@@ -86,6 +86,16 @@ where fm.ctid = d.row_ctid and d.rn > 1;
 create unique index if not exists family_members_one_family_per_user
   on public.family_members (user_id);
 
+-- 2a'. A family whose owner is no longer a member (old "leave" only removed the
+--      membership) gets the longest-standing member as its new owner.
+update public.families f
+set owner_id = (
+  select m.user_id from public.family_members m
+  where m.family_id = f.id order by m.created_at asc nulls last limit 1
+)
+where not exists (select 1 from public.family_members m where m.family_id = f.id and m.user_id = f.owner_id)
+  and exists (select 1 from public.family_members m where m.family_id = f.id);
+
 -- 2b. One meal row per family per day. The old client could create several
 --     while typing; keep the most recently written one.
 delete from public.meal_plans mp
@@ -575,9 +585,21 @@ end $$;
 -- Everything except the auth user itself (the edge function deletes that)
 create or replace function public.delete_user_data(p_user_id uuid)
 returns void language plpgsql security definer set search_path = '' as $$
-declare v_col text;
+declare
+  v_col text;
+  r record;
 begin
   perform public.dinrr_leave_family_for(p_user_id);
+  -- Any other family still pointing at this user as owner (old data): hand it
+  -- to a member, or delete it if nobody is left in it.
+  for r in select f.id from public.families f where f.owner_id = p_user_id loop
+    update public.families set owner_id = (
+      select m.user_id from public.family_members m where m.family_id = r.id
+      order by m.created_at asc nulls last limit 1)
+    where id = r.id
+      and exists (select 1 from public.family_members m where m.family_id = r.id);
+    delete from public.families where id = r.id and owner_id = p_user_id;
+  end loop;
   delete from public.entitlements where user_id = p_user_id;
   delete from public.ai_usage where user_id = p_user_id;
   delete from public.family_join_attempts where user_id = p_user_id;
