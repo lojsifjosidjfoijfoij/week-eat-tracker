@@ -7,4 +7,4 @@ Not part of the app. Install only when needed (`cd tools && npm install && npx p
 - `ad/` — the 20-second 9:16 ad. `stage.html` is the phone frame + captions; `record.mjs` drives the real app
   inside it and saves every frame with all animations stepped on a virtual clock (so the video is exactly the app).
   Needs the app on :4173 and the stage on :4174 (`cd tools/ad && python3 -m http.server 4174`), plus ffmpeg.
-  Change the captions in `stage.html` (`CAPTIONS`) and the language in `record.mjs` to make other versions.
+  `LANG_AD=en node record.mjs` makes the English version (captions in `stage.html`, sample data in `record.mjs` + `e2e/seed.mjs`).

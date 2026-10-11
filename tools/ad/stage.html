@@ -33,16 +33,16 @@ body { font-family: 'DM Sans', sans-serif; color: var(--ink); -webkit-font-smoot
 </style>
 </head>
 <body>
-<div id="hook" class="layer"><h1>Hvad skal vi<br>have <em>i aften?</em></h1></div>
+<div id="hook" class="layer"><h1 id="hook-h">Hvad skal vi<br>have <em>i aften?</em></h1></div>
 <div id="logo" class="layer"><div class="brand">dinrr<sup>+</sup></div></div>
 <div id="caption"><h2 id="cap-h"></h2><p id="cap-p"></p></div>
 <div id="phone"><div id="screen"><div id="inset"></div><div id="island"></div><iframe id="app" src="http://localhost:4173/" title="dinrr"></iframe><div id="home"></div></div></div>
 <div id="tap"></div>
 <div id="end" class="layer">
   <div class="brand">dinrr<sup>+</sup></div>
-  <p class="tag">Ugens aftensmad – planlagt sammen.</p>
-  <div class="pill">Snart i App Store</div>
-  <p class="langs">Til hele familien</p>
+  <p class="tag" id="end-tag">Ugens aftensmad – planlagt sammen.</p>
+  <div class="pill" id="end-pill">Snart i App Store</div>
+  <p class="langs" id="end-sub">Til hele familien</p>
 </div>
 <script>
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -51,13 +51,28 @@ const inOut = (x) => { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.p
 const span = (t, a, b) => clamp((t - a) / (b - a));
 const $ = (id) => document.getElementById(id);
 
-const CAPTIONS = [
+const LANG = new URLSearchParams(location.search).get("lang") || "da";
+const CAPTIONS_EN = [
+  { a: 3.0, b: 5.5, h: "Your whole week.", p: "Every dinner – and what's still missing." },
+  { a: 5.6, b: 10.5, h: "Type the dish.", p: "AI finds the ingredients for you." },
+  { a: 10.6, b: 15.1, h: "One shared list.", p: "Sorted by supermarket aisle." },
+  { a: 15.2, b: 17.6, h: "The whole family. Live.", p: "Mom plans Thursday – you see it instantly." },
+];
+if (LANG === "en") {
+  document.documentElement.lang = "en";
+  document.getElementById("hook-h").innerHTML = "What's for<br>dinner <em>tonight?</em>";
+  document.getElementById("end-tag").textContent = "The week's dinners – planned together.";
+  document.getElementById("end-pill").textContent = "Coming soon to the App Store";
+  document.getElementById("end-sub").textContent = "For the whole family";
+}
+const CAPTIONS_DA = [
   { a: 3.0, b: 5.5, h: "Hele ugen på ét sted.", p: "Aftensmaden for hver dag – og hvad der mangler." },
   { a: 5.6, b: 10.5, h: "Skriv retten.", p: "AI finder ingredienserne for dig." },
   { a: 10.6, b: 15.1, h: "Én fælles indkøbsliste.", p: "Sorteret efter butikkens afdelinger." },
   { a: 15.2, b: 17.6, h: "Hele familien. Live.", p: "Mor planlægger torsdag – du ser det med det samme." },
 ];
 
+const CAPTIONS = LANG === "en" ? CAPTIONS_EN : CAPTIONS_DA;
 window.render = (t, tap) => {
   // Hook
   const hookIn = ease(span(t, 0.1, 0.7)), hookOut = ease(span(t, 1.6, 2.0));

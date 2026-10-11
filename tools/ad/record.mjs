@@ -6,18 +6,25 @@ import { makeBackend, fakeSession } from "../e2e/mock.mjs";
 import { seed } from "../e2e/seed.mjs";
 
 const FPS = 30, DUR = Number(process.env.DUR || 20.6), OUT = process.env.OUT || "frames";
+const LANG = process.env.LANG_AD || "da";
+const L = {
+  da: { family: "Familien Kjær", mom: "Mor", ai: ["Kyllingebryst", "Kokosmælk", "Karrypasta", "Løg", "Hvidløg", "Ris"], dish: "Kylling i karry",
+        thu: "Frikadeller", thuItems: ["Hakket svinekød", "Kartofler", "Rødkål"], locale: "da-DK" },
+  en: { family: "Kjær Family", mom: "Mom", ai: ["Chicken breast", "Coconut milk", "Curry paste", "Onion", "Garlic", "Rice"], dish: "Chicken curry",
+        thu: "Meatballs", thuItems: ["Ground pork", "Potatoes", "Red cabbage"], locale: "en-US" },
+}[LANG];
 const ONLY = process.env.ONLY ? process.env.ONLY.split(",").map(Number) : null; // preview single times
 fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });
 
-const backend = makeBackend({ family: { id: "f1", name: "Familien Kjær", code: "AB7KQ9ZP", owner_id: "u1" }, premium: { self: true, family: true } });
-backend.state.members[1].name = "Mor";
-seed(backend);
+const backend = makeBackend({ family: { id: "f1", name: L.family, code: "AB7KQ9ZP", owner_id: "u1" }, premium: { self: true, family: true } });
+backend.state.members[1].name = L.mom;
+seed(backend, { lang: LANG });
 backend.db.meal_plans = backend.db.meal_plans.filter((m) => m.day_index !== 6); // Sunday is planned in the ad
 let releaseAI = null;
-const AI = ["Kyllingebryst", "Kokosmælk", "Karrypasta", "Løg", "Hvidløg", "Ris"];
+const AI = L.ai;
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
-const ctx = await browser.newContext({ viewport: { width: 540, height: 960 }, deviceScaleFactor: 2, locale: "da-DK" });
+const ctx = await browser.newContext({ viewport: { width: 540, height: 960 }, deviceScaleFactor: 2, locale: L.locale });
 await ctx.route(/supabase\.co/, async (route) => {
   const u = route.request().url();
   if (u.includes("/functions/v1/suggest-ingredients") && route.request().method() === "POST") {
@@ -26,17 +33,17 @@ await ctx.route(/supabase\.co/, async (route) => {
   }
   return backend.handle(route);
 });
-await ctx.addInitScript(([s]) => {
+await ctx.addInitScript(([s, lang]) => {
   if (location.port === "4173") {
     localStorage.setItem("sb-exfsipwxedgvlhsmfrub-auth-token", JSON.stringify(s));
-    localStorage.setItem("mealweek-language", "da");
+    localStorage.setItem("mealweek-language", lang);
     localStorage.setItem("onboarding_done", "true");
     localStorage.setItem("dinrr:shoppingSort", "aisle");
   }
-}, [fakeSession()]);
+}, [fakeSession(), LANG]);
 const page = await ctx.newPage();
 await page.clock.setFixedTime(new Date("2026-10-07T17:30:00"));
-await page.goto("http://localhost:4174/stage.html");
+await page.goto(`http://localhost:4174/stage.html?lang=${LANG}`);
 const app = page.frameLocator("#app");
 const appFrame = () => page.frames().find((f) => f.url().startsWith("http://localhost:4173"));
 await app.locator(".bottom-bar__family").waitFor();
@@ -69,14 +76,14 @@ for (const k of taps) {
   actions.push({ t: k.t - 0.3, run: async () => { tap = { t: k.t, ...(await stagePoint(k.sel, k.nth ?? 0)) }; } });
   if (!k.fake) actions.push({ t: k.t, run: () => app.locator(k.sel).nth(k.nth ?? 0).dispatchEvent("click") });
 }
-const word = "Kylling i karry";
+const word = L.dish;
 [...word].forEach((ch, i) => actions.push({ t: 5.75 + i * 0.07, run: () => app.locator(".day-sheet__meal").pressSequentially(ch) }));
 actions.push({ t: 6.95, run: () => app.locator(".day-sheet__meal").press("Enter") });
 actions.push({ t: 7.75, run: async () => { for (let i = 0; i < 50 && !releaseAI; i++) await page.waitForTimeout(20); releaseAI?.(); } });
 // "Mor" plans Thursday from her phone → the app picks it up live
 actions.push({ t: 16.05, run: async () => {
-  backend.db.meal_plans.push({ id: "m3", family_id: "f1", day_index: 3, meal: "Frikadeller" });
-  ["Hakket svinekød", "Kartofler", "Rødkål"].forEach((name, i) => backend.db.ingredients.push({ id: `mor-${i}`, family_id: "f1", day_index: 3, name, checked: false, created_at: new Date(Date.parse("2026-10-10T16:00:00Z") + i).toISOString() }));
+  backend.db.meal_plans.push({ id: "m3", family_id: "f1", day_index: 3, meal: L.thu });
+  L.thuItems.forEach((name, i) => backend.db.ingredients.push({ id: `mor-${i}`, family_id: "f1", day_index: 3, name, checked: false, created_at: new Date(Date.parse("2026-10-10T16:00:00Z") + i).toISOString() }));
   await appFrame().evaluate(() => window.dispatchEvent(new Event("online")));
   await page.waitForTimeout(600); // let the refetch land before the next frame
 } });
