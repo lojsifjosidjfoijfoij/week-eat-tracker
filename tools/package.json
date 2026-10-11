@@ -1,0 +1,11 @@
+{
+  "name": "dinrr-tools",
+  "private": true,
+  "type": "module",
+  "description": "Browser tests and the ad recorder. Not part of the app build — install only when you need them.",
+  "scripts": {
+    "e2e": "node e2e/run.mjs",
+    "ad": "cd ad && node record.mjs && ffmpeg -y -framerate 30 -i frames/%05d.png -c:v libx264 -preset slow -crf 16 -pix_fmt yuv420p -movflags +faststart dinrr-reklame.mp4"
+  },
+  "devDependencies": { "playwright": "^1.64.0" }
+}

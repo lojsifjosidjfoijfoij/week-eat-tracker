@@ -7,7 +7,7 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   {
     ignores: [
-      "dist", "ios", "node_modules", "supabase/functions",
+      "dist", "ios", "node_modules", "supabase/functions", "tools",
       // old Lovable leftovers — safe to delete (see README)
       "week-eat-tracker", "week-eat-tracker-2", "_backup", "tailwind.config.ts", "src/components/ui",
       "src/integrations", "src/hooks", "src/components/IngredientItem.tsx", "src/components/LanguageSelector.tsx",
