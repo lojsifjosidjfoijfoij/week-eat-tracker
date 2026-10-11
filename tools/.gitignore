@@ -2,3 +2,6 @@ node_modules
 ad/frames
 ad/*.mp4
 e2e/shots
+ad/frames-tt
+ad/*.wav
+ad/sfx.json

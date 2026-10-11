@@ -8,3 +8,6 @@ Not part of the app. Install only when needed (`cd tools && npm install && npx p
   inside it and saves every frame with all animations stepped on a virtual clock (so the video is exactly the app).
   Needs the app on :4173 and the stage on :4174 (`cd tools/ad && python3 -m http.server 4174`), plus ffmpeg.
   `LANG_AD=en node record.mjs` makes the English version (captions in `stage.html`, sample data in `record.mjs` + `e2e/seed.mjs`).
+- `ad/tiktok.html` + `ad/tiktok-record.mjs` + `ad/sound.py` — the "every family group chat at 5pm" TikTok.
+  Record frames (`node tiktok-record.mjs`), then `python3 sound.py` (all sounds are synthesized, no samples),
+  then mux with ffmpeg. Emoji images are Google Noto (Apache-2.0).
