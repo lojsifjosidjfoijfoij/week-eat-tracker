@@ -95,6 +95,23 @@ async function newPage({ session = true, lang = "da", onboarded = true, backend 
   await page.locator(".shop-row__main").first().click();
   check((await page.locator(".basket-btn").innerText()).includes("2"), "basket shows ticked items (" + (await page.locator(".basket-btn").innerText()) + ")");
   await page.screenshot({ path: `${OUT}/05-shopping.png` });
+  // Oregano is a fresh herb by default; hold the row to move it, and it stays moved
+  await page.locator(".shop-mode .add-bar input").fill("Oregano");
+  await page.locator(".shop-mode .add-bar input").press("Enter");
+  const sectionOf = async (name) => page.locator(".shop-mode section", { has: page.locator(".shop-row__name", { hasText: new RegExp(`^${name}$`) }) }).locator(".shop-section__title").innerText();
+  check((await sectionOf("Oregano")).toLowerCase() === "frugt, grønt & brød", "oregano sorted as fresh herb (" + (await sectionOf("Oregano")) + ")");
+  const oreganoRow = page.locator(".shop-row__main", { hasText: "Oregano" });
+  await oreganoRow.scrollIntoViewIfNeeded();
+  const box = await oreganoRow.boundingBox();
+  await page.mouse.move(box.x + 40, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(700);
+  await page.mouse.up();
+  await page.waitForSelector(".aisle-picker");
+  check(!(await oreganoRow.getAttribute("aria-pressed") === "true"), "long-press doesn't tick the item");
+  await page.locator(".aisle-picker__opt", { hasText: "Kolonial" }).click();
+  check((await sectionOf("Oregano")).toLowerCase() === "kolonial", "moved oregano to Kolonial");
+  await page.screenshot({ path: `${OUT}/05b-moved.png` });
   await page.getByRole("tab", { name: "Efter dag" }).click();
   check((await page.locator(".shop-section__title").allInnerTexts()).map((x) => x.toLowerCase()).includes("mandag"), "by-day sections");
   await page.screenshot({ path: `${OUT}/06-shopping-by-day.png` });
@@ -109,10 +126,23 @@ async function newPage({ session = true, lang = "da", onboarded = true, backend 
   await page.getByRole("button", { name: "Luk" }).click();
   check((await page.locator(".week-row").nth(2).innerText()).includes("Spaghetti bolognese") && (await page.locator(".week-row").first().innerText()).includes("Tilføj"), "swap moved meal to Wednesday");
 
+  // aisle correction in the day sheet + persists after reload
+  await page.locator(".week-row").nth(2).click();
+  const aisleBtn = page.locator(".day-sheet button.item-row__aisle").first();
+  const before = await aisleBtn.innerText();
+  await aisleBtn.click();
+  await page.locator(".aisle-picker__opt", { hasText: "Andet" }).click();
+  check((await aisleBtn.innerText()) === "Andet" && before !== "Andet", "day sheet aisle can be changed (" + before + " → Andet)");
+  await page.getByRole("button", { name: "Luk" }).click();
+
   // reload → persisted
   await page.reload();
   await page.waitForSelector(".tonight");
   check((await page.locator(".week-row").nth(2).innerText()).includes("Spaghetti bolognese"), "solo plan persists after reload");
+  await page.locator(".shop-btn").click();
+  await page.getByRole("tab", { name: "Efter afdeling" }).click();
+  check((await sectionOf("Oregano")).toLowerCase() === "kolonial", "aisle correction remembered after reload");
+  await page.locator(".back-btn").click();
 
   // paywall from upsell
   await page.locator(".week-row").nth(3).click();

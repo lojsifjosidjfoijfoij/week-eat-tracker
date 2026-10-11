@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectAisle } from "./aisles";
+import { detectAisle, setAisleOverride } from "./aisles";
 import { isoWeek, todayIndex } from "./week";
 
 describe("detectAisle", () => {
@@ -21,9 +21,48 @@ describe("detectAisle", () => {
     ["Crème fraîche", "aisleDairyLabel"],
     ["Pechuga de pollo", "aisleMeatFishLabel"],
     ["something odd", "aisleOtherLabel"],
+    // Herbs are fresh unless dried; spices and oils are pantry
+    ["Oregano", "aisleFreshLabel"],
+    ["Tørret oregano", "aislePantryLabel"],
+    ["Dried oregano", "aislePantryLabel"],
+    ["Basilikum", "aisleFreshLabel"],
+    ["Salt", "aislePantryLabel"],
+    ["Sort peber", "aislePantryLabel"],
+    ["Paprika", "aislePantryLabel"],
+    ["Hvidløgspulver", "aislePantryLabel"],
+    ["Rapsolie", "aislePantryLabel"],
+    ["Vegetable oil", "aislePantryLabel"],
+    // Danish compounds: the main word is last
+    ["Rødkål", "aisleFreshLabel"],
+    ["Letmælk", "aisleDairyLabel"],
+    ["Rødvin", "aisleDrinksSnacksLabel"],
+    ["Toastbrød", "aisleFreshLabel"],
+    ["Rødløg", "aisleFreshLabel"],
+    // Qualifiers win over the ingredient
+    ["Frossen spinat", "aisleFrozenLabel"],
+    ["Tun på dåse", "aislePantryLabel"],
+    ["Kyllingefond", "aislePantryLabel"],
+    ["Chicken stock", "aislePantryLabel"],
+    ["Appelsinjuice", "aisleDrinksSnacksLabel"],
+    ["Orange juice", "aisleDrinksSnacksLabel"],
+    ["Kidneybønner", "aislePantryLabel"],
+    ["Vaskepulver", "aisleHouseholdLabel"],
+    ["Is", "aisleFrozenLabel"],
+    ["Tomater", "aisleFreshLabel"],
+    ["Cherrytomater", "aisleFreshLabel"],
   ];
   it.each(cases)("%s → %s", (name, aisle) => {
     expect(detectAisle(name)).toBe(aisle);
+  });
+  it("knows German Paprika is the vegetable", () => {
+    expect(detectAisle("Paprika", "de")).toBe("aisleFreshLabel");
+    expect(detectAisle("Paprika", "da")).toBe("aislePantryLabel");
+  });
+  it("remembers a user's correction", () => {
+    setAisleOverride("Oregano", "aislePantryLabel");
+    expect(detectAisle("oregano ")).toBe("aislePantryLabel");
+    setAisleOverride("Oregano", null);
+    expect(detectAisle("Oregano")).toBe("aisleFreshLabel");
   });
 });
 

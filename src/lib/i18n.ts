@@ -234,6 +234,9 @@ const en = {
   inBasketSection: "In the basket ({n})",
   daysShort: "MO,TU,WE,TH,FR,SA,SU",
   openDay: "Open {day}",
+  moveToAisle: "Move to aisle",
+  sortAutomatically: "Sort automatically",
+  moveHint: "Tip: hold an item to move it to another aisle",
 };
 
 export type Strings = typeof en;
@@ -453,6 +456,9 @@ const da: Strings = {
   inBasketSection: "I kurven ({n})",
   daysShort: "MA,TI,ON,TO,FR,LØ,SØ",
   openDay: "Åbn {day}",
+  moveToAisle: "Flyt til afdeling",
+  sortAutomatically: "Sortér automatisk",
+  moveHint: "Tip: hold på en vare for at flytte den til en anden afdeling",
 };
 
 const de: Strings = {
@@ -670,6 +676,9 @@ const de: Strings = {
   inBasketSection: "Im Korb ({n})",
   daysShort: "MO,DI,MI,DO,FR,SA,SO",
   openDay: "{day} öffnen",
+  moveToAisle: "In Abteilung verschieben",
+  sortAutomatically: "Automatisch sortieren",
+  moveHint: "Tipp: Halte einen Artikel gedrückt, um ihn in eine andere Abteilung zu verschieben",
 };
 
 const fr: Strings = {
@@ -887,6 +896,9 @@ const fr: Strings = {
   inBasketSection: "Dans le panier ({n})",
   daysShort: "LU,MA,ME,JE,VE,SA,DI",
   openDay: "Ouvrir {day}",
+  moveToAisle: "Déplacer vers le rayon",
+  sortAutomatically: "Trier automatiquement",
+  moveHint: "Astuce : maintenez un article pour le déplacer vers un autre rayon",
 };
 
 const es: Strings = {
@@ -1104,6 +1116,9 @@ const es: Strings = {
   inBasketSection: "En la cesta ({n})",
   daysShort: "LU,MA,MI,JU,VI,SÁ,DO",
   openDay: "Abrir {day}",
+  moveToAisle: "Mover a la sección",
+  sortAutomatically: "Ordenar automáticamente",
+  moveHint: "Consejo: mantén pulsado un artículo para moverlo a otra sección",
 };
 
 export const translations: Record<Language, Strings> = { en, da, de, fr, es };

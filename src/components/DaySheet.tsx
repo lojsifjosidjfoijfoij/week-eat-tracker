@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { ArrowLeftRight, Lock, Plus, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePremium } from "@/contexts/PremiumContext";
-import { detectAisle } from "@/lib/aisles";
+import { aislesVersion, detectAisle, subscribeAisles } from "@/lib/aisles";
 import { haptic } from "@/lib/haptics";
 import { supabase } from "@/lib/supabase";
 import type { Day } from "@/lib/useWeekPlan";
 import { dayMonth } from "@/lib/week";
+import AislePicker from "./AislePicker";
 import { SparkleIcon } from "./icons";
 import type { SheetIntent } from "./TonightCard";
 
@@ -51,6 +52,8 @@ const DaySheet = ({
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiError, setAiError] = useState("");
   const [swapping, setSwapping] = useState(intent === "swap");
+  const [movingItem, setMovingItem] = useState<string | null>(null);
+  useSyncExternalStore(subscribeAisles, aislesVersion); // re-render when an item is moved to another aisle
   const mealAtFocus = useRef(day.meal);
   const mealInput = useRef<HTMLInputElement>(null);
   const addInput = useRef<HTMLInputElement>(null);
@@ -264,8 +267,14 @@ const DaySheet = ({
                     >
                       <span className={`check${ing.checked ? " is-checked" : ""}`} aria-hidden />
                       <span className={`item-row__name${ing.checked ? " is-checked" : ""}`}>{ing.name}</span>
-                      <span className="item-row__aisle">{t[detectAisle(ing.name)]}</span>
                     </button>
+                    {readOnly ? (
+                      <span className="item-row__aisle">{t[detectAisle(ing.name, language)]}</span>
+                    ) : (
+                      <button className="item-row__aisle" onClick={() => setMovingItem(ing.name)} aria-label={`${t.moveToAisle}: ${ing.name}`}>
+                        {t[detectAisle(ing.name, language)]}
+                      </button>
+                    )}
                     {!readOnly && (
                       <button className="item-row__delete" onClick={() => onDelete(ing.id)} aria-label={f(t.deleteIngredient, { name: ing.name })}>
                         <X size={13} strokeWidth={2} />
@@ -300,6 +309,7 @@ const DaySheet = ({
           </div>
         )}
       </div>
+      {movingItem && <AislePicker itemName={movingItem} onClose={() => setMovingItem(null)} />}
     </div>
   );
 };

@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ChevronDown, ChevronLeft, Plus, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { AISLE_ORDER, detectAisle, type AisleKey } from "@/lib/aisles";
+import { AISLE_ORDER, aislesVersion, detectAisle, subscribeAisles, type AisleKey } from "@/lib/aisles";
 import { haptic } from "@/lib/haptics";
 import { safeLocal } from "@/lib/storage";
 import type { Item, Plan } from "@/lib/useWeekPlan";
+import AislePicker from "./AislePicker";
 
 type Props = {
   plan: Plan;
@@ -22,7 +23,23 @@ const SORT_KEY = "dinrr:shoppingSort";
 
 /** Full-screen shopping mode: big rows, sorted by aisle, tick off as you go. */
 const ShoppingList = ({ plan, readOnly, liveWith, onClose, onSetChecked, onAddExtra, onDeleteExtra }: Props) => {
-  const { t, f, days } = useLanguage();
+  const { t, f, days, language } = useLanguage();
+  const [movingItem, setMovingItem] = useState<string | null>(null);
+  useSyncExternalStore(subscribeAisles, aislesVersion); // re-sort when an item is moved
+
+  // Hold a row to move it to another aisle (a normal tap ticks it off)
+  const pressTimer = useRef<number | undefined>(undefined);
+  const longPressed = useRef(false);
+  const startPress = (name: string) => {
+    longPressed.current = false;
+    window.clearTimeout(pressTimer.current);
+    pressTimer.current = window.setTimeout(() => {
+      longPressed.current = true;
+      haptic.tap();
+      setMovingItem(name);
+    }, 450);
+  };
+  const cancelPress = () => window.clearTimeout(pressTimer.current);
   const [sortMode, setSortMode] = useState<SortMode>(() => (safeLocal.get(SORT_KEY) === "day" ? "day" : "aisle"));
   const [showBasket, setShowBasket] = useState(false);
   const [newExtra, setNewExtra] = useState("");
@@ -68,7 +85,7 @@ const ShoppingList = ({ plan, readOnly, liveWith, onClose, onSetChecked, onAddEx
     if (sortMode === "aisle") {
       const map = new Map<AisleKey, Group[]>();
       open.forEach((g) => {
-        const k = detectAisle(g.name);
+        const k = detectAisle(g.name, language);
         map.set(k, [...(map.get(k) ?? []), g]);
       });
       return AISLE_ORDER.filter((k) => map.has(k)).map((k) => ({ key: k as string, label: t[k], groups: map.get(k)!, hideDays: false }));
@@ -84,6 +101,7 @@ const ShoppingList = ({ plan, readOnly, liveWith, onClose, onSetChecked, onAddEx
   })();
 
   const toggle = (g: Group) => {
+    if (longPressed.current) { longPressed.current = false; return; }
     if (readOnly) return;
     haptic.tap();
     onSetChecked(g.ids, !g.checked);
@@ -107,7 +125,17 @@ const ShoppingList = ({ plan, readOnly, liveWith, onClose, onSetChecked, onAddEx
 
   const row = (g: Group, key: string, hideDays = false) => (
     <div key={key} className={`shop-row${g.checked ? " is-checked" : ""}`}>
-      <button className="shop-row__main" onClick={() => toggle(g)} aria-pressed={g.checked} disabled={readOnly}>
+      <button
+        className="shop-row__main"
+        onClick={() => toggle(g)}
+        onPointerDown={() => { if (!readOnly && !g.checked) startPress(g.name); }}
+        onPointerUp={cancelPress}
+        onPointerLeave={cancelPress}
+        onPointerCancel={cancelPress}
+        onContextMenu={(e) => e.preventDefault()}
+        aria-pressed={g.checked}
+        disabled={readOnly}
+      >
         <span className={`check check--lg${g.checked ? " is-checked" : ""}`} aria-hidden />
         <span className="shop-row__info">
           <span className="shop-row__name">{g.name}</span>
@@ -179,6 +207,8 @@ const ShoppingList = ({ plan, readOnly, liveWith, onClose, onSetChecked, onAddEx
               </section>
             ))}
 
+            {!readOnly && open.length > 0 && sortMode === "aisle" && <p className="shop-hint">{t.moveHint}</p>}
+
             {allDone && (
               <div className="shop-empty">
                 <p className="shop-empty__title">{t.allDone}</p>
@@ -227,6 +257,7 @@ const ShoppingList = ({ plan, readOnly, liveWith, onClose, onSetChecked, onAddEx
           </div>
         )}
       </div>
+      {movingItem && <AislePicker itemName={movingItem} onClose={() => setMovingItem(null)} />}
     </div>
   );
 };
