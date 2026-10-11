@@ -125,10 +125,17 @@ export function useWeekPlan({ userId, familyId, readOnly, onError }: Options) {
     const pending = pendingOps.current;
     const mergeList = (s: Item[], l: Item[]) => {
       const out = s
-        .filter((it) => pending.get(it.id) !== "delete")
+        .filter((it) => {
+          const op = pending.get(it.id);
+          if (op === "delete") return false;
+          // changed locally and now lives on another day (swap in flight) → not here
+          if (op === "update" && !l.some((x) => x.id === it.id)) return false;
+          return true;
+        })
         .map((it) => (pending.get(it.id) === "update" ? l.find((x) => x.id === it.id) ?? it : it));
       l.forEach((it) => {
-        if (pending.get(it.id) === "insert" && !out.some((x) => x.id === it.id)) out.push(it);
+        const op = pending.get(it.id);
+        if ((op === "insert" || op === "update") && !out.some((x) => x.id === it.id)) out.push(it);
       });
       return out;
     };
@@ -367,6 +374,47 @@ export function useWeekPlan({ userId, familyId, readOnly, onError }: Options) {
     }
   };
 
+  /** Swaps two days: meal and ingredients move together. */
+  const swapDays = async (a: number, b: number): Promise<boolean> => {
+    if (readOnly || a === b || a < 0 || b < 0 || a > 6 || b > 6) return false;
+    const before = latestPlan.current;
+    const dayA = before.days[a];
+    const dayB = before.days[b];
+    setPlan((p) => ({ ...p, days: p.days.map((d, i) => (i === a ? p.days[b] : i === b ? p.days[a] : d)) }));
+    if (!familyId) return true;
+
+    // Hold both meals locally while the swap is saved (merge keeps local meals for days in mealTimers)
+    [a, b].forEach((d) => {
+      window.clearTimeout(mealTimers.current.get(d));
+      mealVersions.current[d]++;
+      mealTimers.current.set(d, -1);
+    });
+    const idsA = dayA.ingredients.map((i) => i.id);
+    const idsB = dayB.ingredients.map((i) => i.id);
+    const ok = await track([...idsA, ...idsB], "update", async () => {
+      const meals = await supabase.from("meal_plans").upsert(
+        [
+          { family_id: familyId, day_index: a, meal: dayB.meal.slice(0, 200) },
+          { family_id: familyId, day_index: b, meal: dayA.meal.slice(0, 200) },
+        ],
+        { onConflict: "family_id,day_index" },
+      );
+      if (meals.error) return meals;
+      if (idsA.length) {
+        const r = await supabase.from("ingredients").update({ day_index: b }).in("id", idsA);
+        if (r.error) return r;
+      }
+      if (idsB.length) {
+        const r = await supabase.from("ingredients").update({ day_index: a }).in("id", idsB);
+        if (r.error) return r;
+      }
+      return { error: null };
+    });
+    [a, b].forEach((d) => { if (mealTimers.current.get(d) === -1) mealTimers.current.delete(d); });
+    if (!ok) await refetch();
+    return ok;
+  };
+
   const resetWeek = async (): Promise<boolean> => {
     if (readOnly) return false;
     if (familyId) {
@@ -393,6 +441,7 @@ export function useWeekPlan({ userId, familyId, readOnly, onError }: Options) {
     toggleItem,
     setChecked,
     removeItem,
+    swapDays,
     resetWeek,
   };
 }

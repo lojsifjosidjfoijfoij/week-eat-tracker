@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { RefreshCw, RotateCcw, ShoppingCart } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamily } from "@/contexts/FamilyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -7,17 +7,21 @@ import { usePremium } from "@/contexts/PremiumContext";
 import { useToast } from "@/contexts/ToastContext";
 import { syncWidget } from "@/lib/sharedStorage";
 import { EXTRAS_DAY, useWeekPlan } from "@/lib/useWeekPlan";
-import { todayIndex } from "@/lib/week";
+import { todayIndex, weekDates } from "@/lib/week";
 import { haptic } from "@/lib/haptics";
+import BottomBar from "./BottomBar";
 import ConfirmDialog from "./ConfirmDialog";
-import DayCard from "./DayCard";
+import DaySheet from "./DaySheet";
 import ShoppingList from "./ShoppingList";
+import TonightCard, { type SheetIntent } from "./TonightCard";
+import WeekList from "./WeekList";
+import WeekStrip from "./WeekStrip";
 
 const PULL_THRESHOLD = 64;
 
 const WeeklyPlanner = () => {
   const { user } = useAuth();
-  const { family, familyId, refresh: refreshFamily } = useFamily();
+  const { family, familyId, members, refresh: refreshFamily } = useFamily();
   const { t, f, days, language } = useLanguage();
   const { isPremium, familyPremium, isLoading: premiumLoading, openPaywall } = usePremium();
   const toast = useToast();
@@ -35,7 +39,7 @@ const WeeklyPlanner = () => {
   const api = useWeekPlan({ userId: user!.id, familyId, readOnly: sharingPaused, onError });
   const { plan } = api;
 
-  // Stable callbacks so day cards don't all re-render on every keystroke
+  // Stable callbacks so the sheet and rows don't re-render on every keystroke
   const apiRef = useRef(api);
   useEffect(() => { apiRef.current = api; });
   const onMealChange = useCallback((d: number, m: string) => apiRef.current.setMeal(d, m), []);
@@ -44,10 +48,35 @@ const WeeklyPlanner = () => {
   const onToggle = useCallback((id: string) => apiRef.current.toggleItem(id), []);
   const onDelete = useCallback((id: string) => { apiRef.current.removeItem(id); }, []);
 
+  const [sheet, setSheet] = useState<{ day: number; intent: SheetIntent; key: number } | null>(null);
+  const openDay = useCallback((day: number, intent?: SheetIntent) => {
+    haptic.tap();
+    setSheet({ day, intent, key: Date.now() });
+  }, []);
+  const onSwap = useCallback(async (from: number, to: number) => {
+    const ok = await apiRef.current.swapDays(from, to);
+    if (ok) {
+      haptic.success();
+      toast({ title: f(t.swappedWith, { day: days[to] }) });
+      setSheet((s) => (s ? { ...s, day: to, intent: undefined } : s)); // follow the dinner
+    }
+    return ok;
+  }, [toast, f, t.swappedWith, days]);
+
   const [showShopping, setShowShopping] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetting, setResetting] = useState(false);
-  const today = todayIndex();
+
+  // Today / this week's dates, refreshed when the app comes back after midnight
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const tick = () => setNow((prev) => (new Date().toDateString() === prev.toDateString() ? prev : new Date()));
+    const id = window.setInterval(tick, 60_000);
+    document.addEventListener("visibilitychange", tick);
+    return () => { window.clearInterval(id); document.removeEventListener("visibilitychange", tick); };
+  }, []);
+  const today = todayIndex(now);
+  const dates = useMemo(() => weekDates(now), [now]);
 
   // Home-screen widget shows tonight's meal
   const meals = plan.days.map((d) => d.meal);
@@ -61,7 +90,7 @@ const WeeklyPlanner = () => {
   const scrollTop = () => document.getElementById("root")?.scrollTop ?? 0;
 
   const onTouchStart = (e: React.TouchEvent) => {
-    pullStart.current = familyId && scrollTop() <= 0 ? e.touches[0].clientY : null;
+    pullStart.current = familyId && !sheet && !showShopping && scrollTop() <= 0 ? e.touches[0].clientY : null;
   };
   const onTouchMove = (e: React.TouchEvent) => {
     if (pullStart.current === null) return;
@@ -91,6 +120,8 @@ const WeeklyPlanner = () => {
   const openCount =
     plan.days.reduce((n, d) => n + d.ingredients.filter((i) => !i.checked).length, 0) +
     plan.extras.filter((e) => !e.checked).length;
+  const hasPlan = plan.days.some((d) => d.meal.trim() || d.ingredients.length);
+  const live = !!family && !sharingPaused;
 
   return (
     <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
@@ -119,46 +150,52 @@ const WeeklyPlanner = () => {
         </button>
       )}
 
-      <div className="action-bar">
-        <button className="btn-shopping" onClick={() => setShowShopping(true)}>
-          <ShoppingCart size={16} strokeWidth={2} />
-          {t.shoppingList}
-          {openCount > 0 && <span className="item-count">{openCount}</span>}
-        </button>
-        {!sharingPaused && (
-          <button className="btn-reset" onClick={() => setConfirmReset(true)}>
-            <RotateCcw size={14} strokeWidth={2} />
-            {t.resetWeek}
-          </button>
-        )}
-      </div>
+      <WeekStrip dates={dates} today={today} meals={meals} onOpen={openDay} />
 
       {api.loadingFamily && <p className="sync-note">{t.syncingWithFamily}</p>}
 
-      <div className="week-grid">
-        {days.map((label, i) => (
-          <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 0.04}s` }}>
-            <DayCard
-              dayIndex={i}
-              dayLabel={label}
-              isToday={i === today}
-              meal={plan.days[i].meal}
-              ingredients={plan.days[i].ingredients}
-              readOnly={sharingPaused}
-              onMealChange={onMealChange}
-              onMealCommit={onMealCommit}
-              onAddIngredients={onAddIngredients}
-              onToggle={onToggle}
-              onDelete={onDelete}
-            />
-          </div>
-        ))}
-      </div>
+      <TonightCard today={today} day={plan.days[today]} readOnly={sharingPaused} canSuggest={isPremium} onOpen={openDay} />
+
+      <WeekList
+        plan={plan.days}
+        today={today}
+        readOnly={sharingPaused}
+        onOpen={openDay}
+        onReset={!sharingPaused && hasPlan ? () => setConfirmReset(true) : undefined}
+      />
+
+      <BottomBar
+        members={members}
+        myId={user!.id}
+        familyName={family?.name ?? null}
+        live={live}
+        openCount={openCount}
+        onShop={() => { haptic.tap(); setShowShopping(true); }}
+      />
+
+      {sheet && (
+        <DaySheet
+          key={sheet.key}
+          dayIndex={sheet.day}
+          date={dates[sheet.day]}
+          day={plan.days[sheet.day]}
+          readOnly={sharingPaused}
+          intent={sheet.intent}
+          onClose={() => setSheet(null)}
+          onMealChange={onMealChange}
+          onMealCommit={onMealCommit}
+          onAddIngredients={onAddIngredients}
+          onToggle={onToggle}
+          onDelete={onDelete}
+          onSwap={onSwap}
+        />
+      )}
 
       {showShopping && (
         <ShoppingList
           plan={plan}
           readOnly={sharingPaused}
+          liveWith={live ? family!.name : null}
           onClose={() => setShowShopping(false)}
           onSetChecked={api.setChecked}
           onAddExtra={(name) => api.addItems(EXTRAS_DAY, [name])}
