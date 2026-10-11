@@ -11,3 +11,8 @@ Not part of the app. Install only when needed (`cd tools && npm install && npx p
 - `ad/tiktok.html` + `ad/tiktok-record.mjs` + `ad/sound.py` — the "every family group chat at 5pm" TikTok.
   Record frames (`node tiktok-record.mjs`), then `python3 sound.py` (all sounds are synthesized, no samples),
   then mux with ffmpeg. Emoji images are Google Noto (Apache-2.0).
+
+## Crayon-style TikTok (tools/ad/crayon)
+Hand-drawn "2 million years of what's for dinner?" animation. Pure canvas JS (`crayon.html`, deterministic `render(t)`),
+fonts: Patrick Hand + Caveat Brush (OFL). Serve the folder (`python3 -m http.server 4175`), `node record.mjs` writes `frames/` + `sfx.json`,
+`python3 sound.py` synthesizes `sfx.wav/music.wav/mix.wav`, then encode with ffmpeg as for the other ads.
