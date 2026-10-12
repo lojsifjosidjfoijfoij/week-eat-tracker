@@ -1,4 +1,4 @@
-# Automated crayon video run (cloud, 4× a week)
+# Automated crayon video run (cloud, 4× a week) — TikTok, Facebook Reel, YouTube Shorts
 
 A scheduled task starts a fresh cloud session Mon/Wed/Thu/Sat early morning and follows this file.
 Louis's computer can be off: everything happens in the cloud session, GitHub and Metricool.
@@ -44,14 +44,14 @@ Louis's Metricool plan is FREE, so the review/approval flow is not available. De
 NEVER create a non-draft post, never use `updateScheduledPost` to change a draft into a live post, never touch posts this run did not create.
 1. `getScheduledPosts` for the next 7 days.
 2. Slots: both TikTok and Facebook Reel = the same day as the run, 14:00 (Europe/Copenhagen). One post per platform per day: if a day already has one on that platform, move that platform to the next free day, still 14:00.
-3. Two drafts, music version URL in `media`:
+3. Three drafts (TikTok, Facebook Reel, YouTube Short), music version URL in `media`:
    - TikTok: providers `[{"network":"tiktok"}]`, `tiktokData {privacyOption:"PUBLIC_TO_EVERYONE", title, photoCoverIndex:0}`.
    - Facebook: providers `[{"network":"facebook"}]`, `facebookData {type:"REEL", title}`.
    - text: one short comment-bait line + 4–6 hashtags, English (see BRIEF §6).
-   - YouTube Short (only if `getBrandSettings` shows a connected YouTube channel): a third draft, providers `[{"network":"youtube"}]`, `youtubeData {title:"<title> #shorts", type:"short", privacy:"public", madeForKids:false, isAiGeneratedContent:false, category:"COMEDY"}`, same text, same 14:00 slot rule.
-4. `getScheduledPosts` again and confirm both drafts exist with the right time, platform and text.
+   - YouTube Short (channel UCo77aEKLLxaBfem3psxsA_w is connected): a third draft, always, providers `[{"network":"youtube"}]`, `youtubeData {title:"<title> #shorts", type:"short", privacy:"public", madeForKids:false, isAiGeneratedContent:false, category:"COMEDY"}`, same text, same 14:00 slot rule.
+4. `getScheduledPosts` again and confirm all three drafts exist with the right time, platform and text.
 
 ## 7. Save & report
 - Tick the idea in `ideas.md` (`- [x] #N "Title" — YYYY-MM-DD`), append one line to `LOG.md` (date, N, title, files, draft times or failure).
 - Commit `scenes$N.js record$N.mjs sound$N.py crayon$N.html ideas.md LOG.md` (frames/stills/out/wav are ignored), `git fetch origin claude/nordic-redesign && git rebase FETCH_HEAD`, push to `claude/nordic-redesign`.
-- Final message (short, Danish): title, what happens in the video, the two draft times, and that they wait as drafts in Metricool. Attach the stills sheet and the music mp4 with SendUserFile.
+- Final message (short, Danish): title, what happens in the video, the three draft times, and that they wait as drafts in Metricool. Attach the stills sheet and the music mp4 with SendUserFile.

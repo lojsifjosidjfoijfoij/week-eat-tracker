@@ -59,7 +59,7 @@ Repo: `lojsifjosidjfoijfoij/week-eat-tracker`, mappe `tools/ad/crayon/` (arbejds
 
 ## 6. Sådan postes de – og hvor
 
-**Hvor:** TikTok (@dinrr.app) og Facebook-siden (som Reel). Begge er koblet i Metricool (brand-id 7364131, tidszone Europe/Copenhagen). Gem helst ikke videoer på kun én platform – samme video på begge.
+**Hvor:** TikTok (@dinrr.app), Facebook-siden (som Reel) og YouTube (som Short). Begge er koblet i Metricool (brand-id 7364131, tidszone Europe/Copenhagen). Gem helst ikke videoer på kun én platform – samme video på begge.
 
 **Sådan (via Metricool-værktøjerne i chatten):**
 1. Videoen skal have en **offentlig URL**. Vi lægger filen på den forældreløse git-branch `media` i det offentlige repo (worktree `scratchpad/mediawt`) og bruger `raw.githubusercontent.com/…/media/<fil>.mp4`. (Google Drive virker ikke, den kan kun dele med mails.) Metricool kopierer selv filen over til sin egen server.
