@@ -1,0 +1,6 @@
+frames*/
+stills*/
+out*/
+*.wav
+sfx*.json
+node_modules/
