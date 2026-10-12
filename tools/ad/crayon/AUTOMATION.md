@@ -48,6 +48,7 @@ NEVER create a non-draft post, never use `updateScheduledPost` to change a draft
    - TikTok: providers `[{"network":"tiktok"}]`, `tiktokData {privacyOption:"PUBLIC_TO_EVERYONE", title, photoCoverIndex:0}`.
    - Facebook: providers `[{"network":"facebook"}]`, `facebookData {type:"REEL", title}`.
    - text: one short comment-bait line + 4–6 hashtags, English (see BRIEF §6).
+   - YouTube Short (only if `getBrandSettings` shows a connected YouTube channel): a third draft, providers `[{"network":"youtube"}]`, `youtubeData {title:"<title> #shorts", type:"short", privacy:"public", madeForKids:false, isAiGeneratedContent:false, category:"COMEDY"}`, same text, same 14:00 slot rule.
 4. `getScheduledPosts` again and confirm both drafts exist with the right time, platform and text.
 
 ## 7. Save & report
