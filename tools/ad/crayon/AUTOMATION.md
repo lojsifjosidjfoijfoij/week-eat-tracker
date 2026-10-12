@@ -43,7 +43,7 @@ Louis's Metricool plan is FREE, so the review/approval flow is not available. De
 `createScheduledPost` with `"draft": true`. A draft is never published by itself; Louis opens it in Metricool and schedules it.
 NEVER create a non-draft post, never use `updateScheduledPost` to change a draft into a live post, never touch posts this run did not create.
 1. `getScheduledPosts` for the next 7 days.
-2. Slots: TikTok = the same day 18:00; Facebook Reel = the next day 12:00. One post per platform per day: if a day already has one on that platform, move to the next free day, same time.
+2. Slots: both TikTok and Facebook Reel = the same day as the run, 14:00 (Europe/Copenhagen). One post per platform per day: if a day already has one on that platform, move that platform to the next free day, still 14:00.
 3. Two drafts, music version URL in `media`:
    - TikTok: providers `[{"network":"tiktok"}]`, `tiktokData {privacyOption:"PUBLIC_TO_EVERYONE", title, photoCoverIndex:0}`.
    - Facebook: providers `[{"network":"facebook"}]`, `facebookData {type:"REEL", title}`.
