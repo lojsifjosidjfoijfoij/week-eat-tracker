@@ -1,8 +1,14 @@
-# Automated crayon video run (cloud, 4× a week) — TikTok, Facebook Reel, YouTube Shorts, published automatically
+# Automated dinrr video run (cloud, 4× a week) — TikTok, Facebook Reel, YouTube Shorts, published automatically
 
 A scheduled task starts a fresh cloud session Mon/Wed/Thu/Sat early morning and follows this file.
 Louis's computer can be off: everything happens in the cloud session, GitHub and Metricool.
-Read BRIEF.md first — style, sound, story formula and end-card are fixed and must be kept.
+Read BRIEF.md first — for CRAYON videos the style, sound, story formula and end-card are fixed and must be kept.
+
+## Which kind of video? — ALTERNATE
+Two kinds of video take turns (decided by Louis 2026-10-13):
+- **CRAYON** — hand-drawn crayon cartoon sketch (this folder, steps 1–4 below).
+- **APP** — the REAL dinrr app recorded 1:1 in a clean phone frame on the warm #F2EFE9 background, DM Serif Display captions, English, showing one real feature properly (folder `tools/ad/app/`, see "APP video" below). Style reference: `tools/ad/app/record1.mjs` + `stage1.html` and the group-chat video (`tools/ad/tiktok.html`).
+Look at the last line of `LOG.md`: if it says `CRAYON`, make an APP video this run; if it says `APP`, make a CRAYON video. Every LOG line starts with the kind.
 
 ## 0. Setup
 ```
@@ -11,6 +17,8 @@ cd ~/dinrr && git config user.name "Claude" && git config user.email "noreply@an
 ```
 The environment has Chromium at /opt/pw-browsers/chromium, ffmpeg, python3 with numpy/scipy/Pillow.
 `tools/ad/crayon/make_video.sh` installs npm deps + Playwright, builds the app and starts both servers itself.
+
+## CRAYON video
 
 ## 1. Pick the idea
 - N = highest existing `scenesN.js` number + 1.
@@ -39,6 +47,17 @@ cd ../mediawt && git switch -c media-upload && cp ../dinrr/tools/ad/crayon/out$N
 ```
 Verify `https://raw.githubusercontent.com/lojsifjosidjfoijfoij/week-eat-tracker/media/<file>.mp4` returns 200.
 
+## APP video (instead of steps 1–4)
+1. M = highest `tools/ad/app/recordM.mjs` number + 1. Take the first unchecked idea in `tools/ad/app/ideas.md` (if empty: invent one about a REAL feature, append it).
+2. `cp record<last>.mjs recordM.mjs`, `cp stage<last>.html stageM.html` in `tools/ad/app/`. Edit:
+   - `stageM.html`: the hook text (big DM Serif Display line, visible from frame 0 — same hook rule as crayon: the problem/joke readable in the first second), `CAPTIONS_EN` (3–4 bands: short h2 + one small p line), end card stays (dinrr+ logo, one line, green pill "Coming soon to the App Store" — change only when the app is live).
+   - `recordM.mjs`: mock data (meals/ingredients via `seed` or `backend.db`), the `taps` list (real selectors: `.week-row`, `.day-sheet__meal`, `.ai-box__all`, `.shop-btn`, `.shop-row__main`, `.back-btn`, `.day-sheet .round-btn`…; check `src/components/*.tsx` for others), typed text, live changes (push to `backend.db` + dispatch "online"), and the sound events `ev(t, type)` — types: boom, send, whoosh{dir}, pop{i}, tap, tick{i}, check, ding{i,soft}, heart, end, riser. Put `DUR` 18–22 s.
+   - Every action must be something the real app does. Never fake UI, never show features that don't exist.
+3. Stills: `tools/ad/app/make_appvideo.sh M stills "<6–10 times>"`, Read `tools/ad/app/stillsM/sheet.png`, fix (max 3 rounds).
+4. Render: `SLUG=<kebab> MUSIC_START=<when the phone appears> tools/ad/app/make_appvideo.sh M render` → `tools/ad/app/outM/dinrr-app-MM-<slug>-{music,sfx-only}.mp4` (~6 min). Check duration, contact sheet of ~10 frames, size < 30 MB.
+5. Continue with step 5 (media branch, upload the files from `tools/ad/app/outM/`), 6 (Metricool) and 7. For APP videos set TikTok `isAigc: false` (it is a real screen recording of the real app) and keep `commercialContentOwnBrand: true`. YouTube category `HOWTO_STYLE`. The caption still asks a real question (e.g. "how does your family plan dinner? 👇").
+6. Tick the idea in `tools/ad/app/ideas.md`, LOG line starts with `APP #M`; commit `tools/ad/app/recordM.mjs stageM.html ideas.md` + LOG.md.
+
 ## 6. Metricool — publish automatically (brand/blogId 7364131, Europe/Copenhagen)
 Louis decided (2026-10-13) that videos are published without his approval. Create **scheduled posts** with `createScheduledPost`, `"draft": false`, `"autoPublish": true` — but ONLY if the self-review in step 3/4 passed (no cut-off text, the joke reads, real app shown, end-card correct, no rule problems below). If the video failed review or you are unsure, create the same three posts with `"draft": true` instead and say so in the report.
 Never edit or delete posts this run did not create.
@@ -61,6 +80,6 @@ Never edit or delete posts this run did not create.
 4. `getScheduledPosts` again and confirm all three exist with the right time, platform, text and draft:false.
 
 ## 7. Save & report
-- Tick the idea in `ideas.md` (`- [x] #N "Title" — YYYY-MM-DD`), append one line to `LOG.md` (date, N, title, files, post times or failure).
+- Tick the idea in `ideas.md` (`- [x] #N "Title" — YYYY-MM-DD`), append one line to `LOG.md` starting with the kind: `CRAYON #N` or `APP #M`, then date, title, files, post times or failure.
 - Commit `scenes$N.js record$N.mjs sound$N.py crayon$N.html ideas.md LOG.md` (frames/stills/out/wav are ignored), `git fetch origin claude/nordic-redesign && git rebase FETCH_HEAD`, push to `claude/nordic-redesign`.
 - Final message (short, Danish): title, what happens in the video, the three publish times (and if anything fell back to draft, why). Attach the stills sheet and the music mp4 with SendUserFile.
