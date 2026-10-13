@@ -48,7 +48,7 @@ NEVER create a non-draft post, never use `updateScheduledPost` to change a draft
    - TikTok: providers `[{"network":"tiktok"}]`, `tiktokData {privacyOption:"PUBLIC_TO_EVERYONE", title, photoCoverIndex:0}`.
    - Facebook: providers `[{"network":"facebook"}]`, `facebookData {type:"REEL", title}`.
    - text: one short comment-bait line + 4–6 hashtags, English (see BRIEF §6).
-   - YouTube Short (channel UCo77aEKLLxaBfem3psxsA_w is connected): a third draft, always, providers `[{"network":"youtube"}]`, `youtubeData {title:"<title> #shorts", type:"short", privacy:"public", madeForKids:false, isAiGeneratedContent:false, category:"COMEDY"}`, same text, same 14:00 slot rule.
+   - YouTube Short (channel UCo77aEKLLxaBfem3psxsA_w is connected): a third draft, always, providers `[{"network":"youtube"}]`, `youtubeData {title:"<title> #shorts", type:"short", privacy:"public", madeForKids:false, isAiGeneratedContent:false, category:"COMEDY"}`, same 14:00 slot rule. YouTube gets its OWN longer text (it is the video description): line 1 = hook from the video; blank line; 2 sentences: the problem in the video + how dinrr solves it; blank line; a comment question with 👇; blank line; "📲 dinrr – the weekly meal planner for families" and "TikTok: @dinrr.app"; blank line; "#shorts" + 5 hashtags. Add `tags` (6–8 search phrases, always incl. "meal planner app" and "dinrr"). Title max ~60 chars, ends with " #shorts". Example: the #4 YouTube draft in Metricool (2026-10-18 16:00).
 4. `getScheduledPosts` again and confirm all three drafts exist with the right time, platform and text.
 
 ## 7. Save & report
