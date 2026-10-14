@@ -8,9 +8,9 @@ Louis can reorder, add or delete lines at any time. If the queue is empty, inven
 - [x] #2 "Save the tomato" (mini story)
 - [x] #3 "The Dinner Hotline" (family sketch)
 - [x] #4 "Two Shoppers, One Supermarket" (family sketch, split screen, realtime list) — 2026-10-13
+- [x] #5 "The Fridge Interview" (fridge interviewed like a tired employee, counter 38→99+, app: week → day list → shopping list) — 2026-10-14
 
 ## Queue
-- [ ] "The Fridge Interview" — the fridge is interviewed like a tired employee: "They open me 40 times a day and close me without taking anything." Ends happy: "Now they know what to use." End line: "Give your fridge a break."
 - [ ] "Dinner at 5:47 PM" — a clock shows 17:47, Mom opens the fridge: one egg, mustard, a lemon. Each time she opens it there is less, at last only the light. Resolution: fridge full, week planned. End line: "5:47 PM. Already sorted."
 - [ ] "The Group Chat" — the family group chat scrolls down the screen ("what's for dinner?", "idk", "pizza?", "AGAIN??", 30 emojis), a bonk per message, the phone starts smoking. Resolution: everyone sees the week live in the app, the chat goes quiet. End line: "Mute the dinner chat."
 - [ ] "The Last Tomato" (Save the Tomato 2) — Tom the tomato returns to rescue a forgotten cucumber at the back of the fridge, racing through a jungle of leftovers. The cucumber is added to Thursday's salad in the app. End line: "No veggie left behind."
