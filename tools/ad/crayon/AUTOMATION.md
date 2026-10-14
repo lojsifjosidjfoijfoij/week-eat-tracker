@@ -55,7 +55,7 @@ Verify `https://raw.githubusercontent.com/lojsifjosidjfoijfoij/week-eat-tracker/
    - Every action must be something the real app does. Never fake UI, never show features that don't exist.
 3. Stills: `tools/ad/app/make_appvideo.sh M stills "<6–10 times>"`, Read `tools/ad/app/stillsM/sheet.png`, fix (max 3 rounds).
 4. Render: `SLUG=<kebab> MUSIC_START=<when the phone appears> tools/ad/app/make_appvideo.sh M render` → `tools/ad/app/outM/dinrr-app-MM-<slug>-{music,sfx-only}.mp4` (~6 min). Check duration, contact sheet of ~10 frames, size < 30 MB.
-5. Continue with step 5 (media branch, upload the files from `tools/ad/app/outM/`), 6 (Metricool) and 7. For APP videos set TikTok `isAigc: false` (it is a real screen recording of the real app) and keep `commercialContentOwnBrand: true`. YouTube category `HOWTO_STYLE`. The caption still asks a real question (e.g. "how does your family plan dinner? 👇").
+5. Continue with step 5 (media branch, upload the files from `tools/ad/app/outM/`), 6 (Metricool) and 7. For APP videos (like all videos) TikTok `isAigc: false`, and keep `commercialContentOwnBrand: true`. YouTube category `HOWTO_STYLE`. The caption still asks a real question (e.g. "how does your family plan dinner? 👇").
 6. Tick the idea in `tools/ad/app/ideas.md`, LOG line starts with `APP #M`; commit `tools/ad/app/recordM.mjs stageM.html ideas.md` + LOG.md.
 
 ## 6. Metricool — publish automatically (brand/blogId 7364131, Europe/Copenhagen)
@@ -63,7 +63,7 @@ Louis decided (2026-10-13) that videos are published without his approval. Creat
 Never edit or delete posts this run did not create.
 
 **Platform rules (TikTok Community Guidelines / branded content, YouTube, Meta) — always:**
-- TikTok: `commercialContentOwnBrand: true` (we promote our own app = "Your brand" disclosure) and `isAigc: true` (the video is made with AI). Facebook/YouTube: no extra flags; YouTube `isAiGeneratedContent:false` is correct because nothing is realistic.
+- TikTok: `commercialContentOwnBrand: true` (we promote our own app = "Your brand" disclosure) and `isAigc: false` for ALL videos (Louis decided 2026-10-14: never mark the videos as AI on TikTok). Facebook/YouTube: no extra flags; YouTube `isAiGeneratedContent:false` is correct because nothing is realistic.
 - Original content only: our own drawings and our own synthesized sound. No real people, celebrities, known characters, logos, brands, products or copyrighted music.
 - Honest: no false or exaggerated claims about the app (only features it really has), no fake reviews/testimonials, no "#1 app", no prices/discounts/giveaways, no links or promo codes in the text.
 - Safe & family-friendly: nothing dangerous, no unsafe food handling, no mocking groups of people, no violence beyond cartoon slapstick, kids characters only in everyday family situations.
@@ -73,7 +73,7 @@ Never edit or delete posts this run did not create.
 1. `getScheduledPosts` for the next 7 days.
 2. Slots: TikTok, Facebook Reel and YouTube Short = the same day as the run, 14:00 (Europe/Copenhagen). If a platform already has a post that day, move that platform to the next free day, still 14:00.
 3. Three posts, music version URL in `media`:
-   - TikTok: providers `[{"network":"tiktok"}]`, `tiktokData {privacyOption:"PUBLIC_TO_EVERYONE", title, photoCoverIndex:0, commercialContentOwnBrand:true, isAigc:true}`.
+   - TikTok: providers `[{"network":"tiktok"}]`, `tiktokData {privacyOption:"PUBLIC_TO_EVERYONE", title, photoCoverIndex:0, commercialContentOwnBrand:true, isAigc:false}`.
    - Facebook: providers `[{"network":"facebook"}]`, `facebookData {type:"REEL", title}`.
    - text (TikTok + Facebook): one short line that makes people want to answer + 4–6 hashtags, English (see BRIEF §6).
    - YouTube Short: providers `[{"network":"youtube"}]`, `youtubeData {title:"<title> #shorts", type:"short", privacy:"public", madeForKids:false, isAiGeneratedContent:false, category:"COMEDY", tags:[…]}`. YouTube gets its OWN longer text (it is the video description): line 1 = hook from the video; blank line; 2 sentences: the problem in the video + how dinrr solves it; blank line; a comment question with 👇; blank line; "📲 dinrr – the weekly meal planner for families" and "TikTok: @dinrr.app"; blank line; "#shorts" + 5 hashtags. `tags` = 6–8 search phrases, always incl. "meal planner app" and "dinrr". Title max ~60 chars, ends with " #shorts". Example: the #4 YouTube post in Metricool (2026-10-18 16:00).
