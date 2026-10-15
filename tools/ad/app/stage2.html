@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=540, initial-scale=1">
+<title>dinrr ad stage</title>
+<style>
+@font-face { font-family: 'DM Sans'; font-weight: 300 700; src: url(../fonts/dm-sans-latin-opsz-normal.woff2) format('woff2-variations'); }
+@font-face { font-family: 'DM Serif Display'; font-style: normal; src: url(../fonts/dm-serif-display-latin-400-normal.woff2) format('woff2'); }
+@font-face { font-family: 'DM Serif Display'; font-style: italic; src: url(../fonts/dm-serif-display-latin-400-italic.woff2) format('woff2'); }
+:root { --bg:#F2EFE9; --surface:#FDFCFA; --ink:#1A1714; --ink-2:#5C5650; --ink-3:#A39C95; --green:#2A4D0F; --green-mid:#3D7016; --green-tint:#EBF2E2; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 540px; height: 960px; overflow: hidden; background: var(--bg); }
+body { font-family: 'DM Sans', sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; position: relative; }
+.layer { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; will-change: opacity, transform; }
+#hook h1 { font-family: 'DM Serif Display', serif; font-weight: 400; font-size: 62px; line-height: 1.05; letter-spacing: -0.01em; }
+#hook h1 em { color: var(--green); }
+#hook { justify-content: flex-start; padding-top: 150px; }
+#hook .sub { margin-top: 18px; font-size: 26px; color: var(--ink-2); font-weight: 500; }
+#hook .field { margin-top: 46px; display: inline-flex; align-items: center; gap: 10px; background: var(--surface); border-radius: 22px; padding: 18px 30px; font-family: 'DM Serif Display', serif; font-size: 46px; box-shadow: 0 14px 34px rgba(26,23,20,0.12); }
+#hook .field .spark { font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--green); background: var(--green-tint); border-radius: 100px; padding: 6px 12px; }
+#hook .chips { margin-top: 34px; width: 470px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+#hook .chips span { display: inline-block; background: var(--green-tint); color: var(--green); border-radius: 100px; padding: 11px 18px; font-size: 21px; font-weight: 600; opacity: 0; }
+#end .ask { margin-top: 26px; font-family: 'DM Serif Display', serif; font-size: 30px; color: var(--ink); }
+#logo .brand, #end .brand { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 132px; letter-spacing: -0.03em; line-height: 1; }
+#logo .brand sup, #end .brand sup { font-family: 'DM Sans', sans-serif; font-style: normal; font-size: 44px; font-weight: 700; color: var(--green); vertical-align: 0.95em; margin-left: 6px; }
+#caption { position: absolute; left: 0; right: 0; top: 64px; text-align: center; }
+#caption h2 { font-family: 'DM Serif Display', serif; font-weight: 400; font-size: 44px; line-height: 1.08; letter-spacing: -0.01em; }
+#caption p { margin-top: 10px; font-size: 17px; color: var(--ink-2); }
+#phone { position: absolute; left: 50%; top: 222px; width: 332px; height: 695px; margin-left: -166px; border-radius: 54px; background: #1A1714; padding: 10px; box-shadow: 0 40px 80px rgba(42,77,15,0.18), 0 12px 30px rgba(26,23,20,0.18); will-change: transform, opacity; }
+#screen { position: relative; width: 312px; height: 675px; border-radius: 44px; overflow: hidden; background: var(--bg); }
+#inset { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: var(--bg); }
+#island { position: absolute; top: 9px; left: 50%; width: 92px; height: 26px; margin-left: -46px; border-radius: 14px; background: #000; z-index: 3; }
+#app { position: absolute; left: 0; top: 37.6px; width: 390px; height: 763px; border: 0; transform: scale(0.8); transform-origin: 0 0; }
+#home { position: absolute; bottom: 7px; left: 50%; width: 112px; height: 4px; margin-left: -56px; border-radius: 3px; background: rgba(26,23,20,0.85); z-index: 3; }
+#tap { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: rgba(26,23,20,0.24); border: 2px solid rgba(255,255,255,0.95); box-shadow: 0 2px 10px rgba(26,23,20,0.2); opacity: 0; pointer-events: none; z-index: 10; }
+#end .tag { margin-top: 18px; font-size: 21px; color: var(--ink-2); }
+#end .pill { margin-top: 34px; display: inline-flex; align-items: center; gap: 10px; background: var(--green); color: #fff; border-radius: 100px; padding: 15px 28px; font-size: 18px; font-weight: 600; box-shadow: 0 10px 28px rgba(42,77,15,0.3); }
+#end .langs { margin-top: 22px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="hook" class="layer"><h1 id="hook-h">I typed<br><em>one word.</em></h1><p class="sub">…and the app wrote the shopping list.</p>
+<div class="field">Lasagna <span class="spark">AI</span></div>
+<div class="chips" id="chips"></div></div>
+<div id="caption"><h2 id="cap-h"></h2><p id="cap-p"></p></div>
+<div id="phone"><div id="screen"><div id="inset"></div><div id="island"></div><iframe id="app" src="http://localhost:4173/" title="dinrr"></iframe><div id="home"></div></div></div>
+<div id="tap"></div>
+<div id="end" class="layer">
+  <div class="brand">dinrr<sup>+</sup></div>
+  <p class="tag" id="end-tag">Ugens aftensmad – planlagt sammen.</p>
+  <div class="pill" id="end-pill">Snart i App Store</div>
+  <p class="ask" id="end-ask">What's your family's go-to dinner?</p>
+</div>
+<script>
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = (x) => 1 - Math.pow(1 - clamp(x), 3);           // easeOutCubic
+const inOut = (x) => { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const span = (t, a, b) => clamp((t - a) / (b - a));
+const $ = (id) => document.getElementById(id);
+
+const LANG = new URLSearchParams(location.search).get("lang") || "en";
+const CAPTIONS_EN = [
+  { a: 2.75, b: 7.3, h: "Type the dinner.", p: "Thursday: lasagna." },
+  { a: 7.4, b: 11.2, h: "AI writes the ingredients.", p: "Add them all with one tap." },
+  { a: 11.3, b: 15.6, h: "Straight onto the list.", p: "Sorted by aisle. Shared with the family." },
+];
+const CHIPS = ["Lasagna sheets", "Ground beef", "Chopped tomatoes", "Onion", "Garlic", "Milk", "Butter", "Grated cheese"];
+document.getElementById("chips").innerHTML = CHIPS.map((c) => `<span>+ ${c}</span>`).join("");
+if (LANG === "en") {
+  document.documentElement.lang = "en";
+  document.getElementById("end-tag").textContent = "Type the dinner. Get the list.";
+  document.getElementById("end-pill").textContent = "Coming soon to the App Store";
+}
+const CAPTIONS_DA = [
+  { a: 3.0, b: 5.5, h: "Hele ugen på ét sted.", p: "Aftensmaden for hver dag – og hvad der mangler." },
+  { a: 5.6, b: 10.5, h: "Skriv retten.", p: "AI finder ingredienserne for dig." },
+  { a: 10.6, b: 15.1, h: "Én fælles indkøbsliste.", p: "Sorteret efter butikkens afdelinger." },
+  { a: 15.2, b: 17.6, h: "Hele familien. Live.", p: "Mor planlægger torsdag – du ser det med det samme." },
+];
+
+const CAPTIONS = LANG === "en" ? CAPTIONS_EN : CAPTIONS_DA;
+window.render = (t, tap) => {
+  // Hook — fully visible at frame 0 (hook rule), chips pop out from t=0.15
+  const hookOut = ease(span(t, 1.95, 2.35)), bump = 1 + 0.04 * Math.max(0, 1 - t / 0.35);
+  $("hook").style.opacity = 1 - hookOut;
+  $("hook").style.transform = `translateY(${-hookOut * 40}px) scale(${bump})`;
+  [...$("chips").children].forEach((el, i) => {
+    // all chips already on screen at frame 0 (frame-0 test); each bounces in turn with its pop sound
+    const k = span(t, 0.2 + i * 0.13, 0.45 + i * 0.13), b = Math.sin(Math.PI * k);
+    el.style.opacity = 1; el.style.transform = `translateY(${-10 * b}px) scale(${1 + 0.12 * b})`;
+  });
+  // Phone
+  const up = inOut(span(t, 2.0, 2.8)), down = inOut(span(t, 15.7, 16.4));
+  $("phone").style.opacity = clamp(up * 1.4) * (1 - down);
+  $("phone").style.transform = `translateY(${(1 - up) * 760 + down * 120}px) scale(${1 - down * 0.06})`;
+  // Captions
+  const c = CAPTIONS.find((c) => t >= c.a - 0.05 && t < c.b);
+  if (c) {
+    if ($("cap-h").textContent !== c.h) { $("cap-h").textContent = c.h; $("cap-p").textContent = c.p; }
+    const k = ease(span(t, c.a, c.a + 0.45)) * (1 - ease(span(t, c.b - 0.3, c.b)));
+    $("caption").style.opacity = k;
+    $("caption").style.transform = `translateY(${(1 - k) * 14}px)`;
+  } else $("caption").style.opacity = 0;
+  // Tap indicator
+  if (tap) {
+    const d = t - tap.t;                    // tap.t = moment of the click
+    const vis = d < -0.28 ? 0 : d < -0.12 ? (d + 0.28) / 0.16 : d < 0.18 ? 1 : Math.max(0, 1 - (d - 0.18) / 0.2);
+    const press = d < -0.12 ? 1 : d < 0 ? 1 - 0.25 * ((d + 0.12) / 0.12) : 0.75 + 0.35 * clamp(d / 0.25);
+    $("tap").style.opacity = vis;
+    $("tap").style.left = tap.x + "px"; $("tap").style.top = tap.y + "px";
+    $("tap").style.transform = `scale(${press})`;
+  } else $("tap").style.opacity = 0;
+  // End card
+  const endIn = ease(span(t, 16.1, 16.8));
+  $("end").style.opacity = endIn;
+  $("end").style.transform = `translateY(${(1 - endIn) * 26}px)`;
+};
+window.render(0, null);
+</script>
+</body>
+</html>
