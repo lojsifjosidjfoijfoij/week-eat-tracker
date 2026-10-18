@@ -2,6 +2,16 @@
 
 Written by the daily 21:45 report run. One line per video per day + short learnings. The video runs read this before writing scenes.
 
+## What works so far (rewritten by every stats run; video runs MUST follow this)
+Based on 7 TikToks, 5 FB Reels, 7 YT Shorts (2026-10-11 → 10-18). Small numbers, treat as best guesses.
+- ✅ Absurd "what's for dinner?" crayon story (#1 dino, 230 million years) holds longest: 7 s on TikTok; on YouTube those who got past 2 s watched 19 s of 23 s. → Story/pacing is fine; only the first 1–2 s lose people.
+- ✅ A crayon character/object with a face (#5 Fridge interview) got the most likes (12 on 268 ≈ 4.5 %).
+- ✅ "be honest… how many times a day…" caption question (Group chat 5pm) is the only TikTok pushed past the ~280 test pool (838 views), despite weak retention. → Use this question style in captions.
+- ❌ App UI as the opening (App #1, App #2, Group chat) holds only 1–2 s. → Open on a crayon story/character; the app comes later.
+- ❌ Food-waste/tomato opening held 4 s of 27 s; #6 5:47 PM empty fridge held 4 s of 23 s. Neither beat dino.
+- ❓ Comments are still 0 on every platform. A question in the caption alone doesn't get comments → try the question big on screen.
+- 🧪 Next to test: crayon-character hook in frame 0 + "be honest…" question caption + on-screen question at the end.
+
 ## Learnings
 - 2026-10-13: #1 TikTok got 270 views (98% For You) but average watch was 7 s of 23 s, almost nobody watched to the end → hook too slow. New hook rule added to AUTOMATION.md.
 
