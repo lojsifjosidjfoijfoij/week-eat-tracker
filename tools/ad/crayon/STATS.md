@@ -10,10 +10,21 @@ Written by the daily 21:45 report run. One line per video per day + short learni
 - 2026-10-15: #5 Fridge interview (TikTok) got the most likes so far (12 on 268 views, ~4.5 %) but avg watch only 5 s / 23 s; #1 dino still holds longest (7 s). App-screen demos (App #1, App #2) both hold just ~1 s on TikTok → open with a crayon story/character, not the app UI.
 - 2026-10-16: App #2 I typed one word (TikTok) ended at 282 views but avg watch 1 s and ~0 % full watches; #5 Fridge got 12 likes on 268 with the same test reach. All 5 TikToks so far stopped at 150–282 views (the test pool) → none has broken out yet; only a stronger first 1–2 s (crayon character, not app UI) will change that.
 - 2026-10-17: Group chat 5pm (App, TikTok) is the first video past the ~270 test pool: 837 views (100 % For You), yet avg watch only 2 s and 0 likes → TikTok pushed it on the topic/caption ("be honest… how many times a day"), not on retention. One data point; the opening still loses people, so a crayon-character hook + this "be honest" question format is the combo to try.
+- 2026-10-18: #6 Dinner at 5:47 PM (crayon character hook) also stopped at the ~280 test pool with 4 s / 23 s avg → 6 of 7 TikToks capped at the test pool; the crayon hooks so far hold 4–7 s, none yet beats #1 dino (7 s). The opening still needs to be faster/stronger.
 
 ## Daily numbers
 | date | video | platform | views | likes | comments | shares | avg watch |
 |---|---|---|---|---|---|---|---|
+| 2026-10-18 | #6 Dinner at 5:47 PM | TikTok | 280 (100 % For You) | 3 | 0 | 0 | 4 s / 23 s |
+| 2026-10-18 | #6 Dinner at 5:47 PM | Facebook Reel | 0 (data lags) | 0 | 0 | – | – |
+| 2026-10-18 | Group chat 5pm (App) | TikTok | 838 (99.9 % For You, flat) | 0 | 0 | 0 | 2 s / ~20 s |
+| 2026-10-18 | Group chat 5pm (App) | Facebook Reel | 135 (unchanged) | 1 | 0 | – | 1 s / ~20 s |
+| 2026-10-18 | App #2 I typed one word | TikTok | 282 (unchanged) | 1 | 0 | 0 | 1 s |
+| 2026-10-18 | #5 Fridge interview | TikTok / FB Reel | 268 / 240 | 12 / 0 | 0 | 0 | 5 s / 3 s of 23 s |
+| 2026-10-18 | #2 Save the tomato | TikTok | 275 (unchanged) | 1 | 0 | 0 | 4 s / 27 s |
+| 2026-10-18 | #1 230 million years | TikTok / FB Reel | 270 / 233 (unchanged) | 8 / 0 | 0 | 0 | 7 s / 6 s of 23 s |
+| 2026-10-18 | All YT Shorts (incl. #4 Two shoppers, posted today 16:00) | YouTube Short | – (per-video still null; channel views 544 on 10-15, later days not reported) | – | – | – | – |
+| 2026-10-18 | Followers | TikTok / FB / YT | 4 (0) / 0 / 1 (0) | – | – | – | – |
 | 2026-10-17 | #6 Dinner at 5:47 PM | TikTok | 103 (100 % For You, posted 14:00, early) | 2 | 0 | 0 | 5 s / 23 s |
 | 2026-10-17 | #6 Dinner at 5:47 PM | Facebook Reel | – (posted 14:00, data lags) | – | – | – | – |
 | 2026-10-17 | Group chat 5pm (App) | TikTok | 837 (100 % For You) | 0 | 0 | 0 | 2 s / ~20 s |
