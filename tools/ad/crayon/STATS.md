@@ -3,14 +3,14 @@
 Written by the daily 21:45 report run. One line per video per day + short learnings. The video runs read this before writing scenes.
 
 ## What works so far (rewritten by every stats run; video runs MUST follow this)
-Based on 7 TikToks, 5 FB Reels, 7 YT Shorts (2026-10-11 → 10-18). Small numbers, treat as best guesses.
+Based on 7 TikToks with data (+ #7 Onions posted 10-19, no data yet), 5 FB Reels, 7 YT Shorts (2026-10-11 → 10-19). Small numbers, treat as best guesses. YT per-video data is still null in Metricool, so YT conclusions rest on one Studio read (#1).
 - ✅ Absurd "what's for dinner?" crayon story (#1 dino, 230 million years) holds longest: 7 s on TikTok; on YouTube those who got past 2 s watched 19 s of 23 s. → Story/pacing is fine; only the first 1–2 s lose people.
 - ✅ A crayon character/object with a face (#5 Fridge interview) got the most likes (12 on 268 ≈ 4.5 %).
 - ✅ "be honest… how many times a day…" caption question (Group chat 5pm) is the only TikTok pushed past the ~280 test pool (838 views), despite weak retention. → Use this question style in captions.
 - ❌ App UI as the opening (App #1, App #2, Group chat) holds only 1–2 s. → Open on a crayon story/character; the app comes later.
 - ❌ Food-waste/tomato opening held 4 s of 27 s; #6 5:47 PM empty fridge held 4 s of 23 s. Neither beat dino.
 - ❓ Comments are still 0 on every platform. A question in the caption alone doesn't get comments → try the question big on screen.
-- 🧪 Next to test: crayon-character hook in frame 0 + "be honest…" question caption + on-screen question at the end.
+- 🧪 Running now: #7 Onions (TikTok 10-19) uses the "be honest… how many times…" caption again → read on 10-20/21 whether it passes ~280 views. If it does, the caption style is confirmed (2 of 2); if not, Group chat's 838 was luck. Next video should still pair it with a crayon-character hook in frame 0 + the question big on screen at the end.
 
 ## Learnings
 - 2026-10-13: #1 TikTok got 270 views (98% For You) but average watch was 7 s of 23 s, almost nobody watched to the end → hook too slow. New hook rule added to AUTOMATION.md.
@@ -22,9 +22,19 @@ Based on 7 TikToks, 5 FB Reels, 7 YT Shorts (2026-10-11 → 10-18). Small number
 - 2026-10-17: Group chat 5pm (App, TikTok) is the first video past the ~270 test pool: 837 views (100 % For You), yet avg watch only 2 s and 0 likes → TikTok pushed it on the topic/caption ("be honest… how many times a day"), not on retention. One data point; the opening still loses people, so a crayon-character hook + this "be honest" question format is the combo to try.
 - 2026-10-18: #6 Dinner at 5:47 PM (crayon character hook) also stopped at the ~280 test pool with 4 s / 23 s avg → 6 of 7 TikToks capped at the test pool; the crayon hooks so far hold 4–7 s, none yet beats #1 dino (7 s). The opening still needs to be faster/stronger.
 
+- 2026-10-19: #7 Onions Facebook Reel failed to publish ("Metricool account limit") → FB Reels may keep failing until the Metricool plan/limit is fixed; video runs should check post status after scheduling.
+
 ## Daily numbers
 | date | video | platform | views | likes | comments | shares | avg watch |
 |---|---|---|---|---|---|---|---|
+| 2026-10-19 | #7 Onions (be honest… walk back for onions) | TikTok | – (posted today 14:00, not in Metricool yet) | – | – | – | – |
+| 2026-10-19 | #7 Onions | Facebook Reel | NOT PUBLISHED – "You have reached your Metricool account limit" | – | – | – | – |
+| 2026-10-19 | #6 Dinner at 5:47 PM | TikTok | 280 (unchanged, 100 % For You) | 3 | 0 | 0 | 4 s / 23 s |
+| 2026-10-19 | #6 Dinner at 5:47 PM | Facebook Reel | 1 | 0 | 0 | – | 0 s |
+| 2026-10-19 | Group chat 5pm (App) | TikTok / FB Reel | 838 / 135 (unchanged) | 0 / 1 | 0 | 0 | 2 s / 1 s of ~20 s |
+| 2026-10-19 | #5, #2, #1, App #2 | TikTok / FB Reel | all unchanged (268/240, 275, 270/233, 282) | 12, 1, 8, 1 | 0 | 0 | as 10-18 |
+| 2026-10-19 | All YT Shorts | YouTube Short | – (per-video null; channel views 1097 on 10-16, later days not reported) | – | – | – | – |
+| 2026-10-19 | Followers | TikTok / FB / YT | 4 (0) / 0 / 1 (0) | – | – | – | – |
 | 2026-10-18 | #6 Dinner at 5:47 PM | TikTok | 280 (100 % For You) | 3 | 0 | 0 | 4 s / 23 s |
 | 2026-10-18 | #6 Dinner at 5:47 PM | Facebook Reel | 0 (data lags) | 0 | 0 | – | – |
 | 2026-10-18 | Group chat 5pm (App) | TikTok | 838 (99.9 % For You, flat) | 0 | 0 | 0 | 2 s / ~20 s |
