@@ -3,14 +3,15 @@
 Written by the daily 21:45 report run. One line per video per day + short learnings. The video runs read this before writing scenes.
 
 ## What works so far (rewritten by every stats run; video runs MUST follow this)
-Based on 7 TikToks with data (+ #7 Onions posted 10-19, no data yet), 5 FB Reels, 7 YT Shorts (2026-10-11 → 10-19). Small numbers, treat as best guesses. YT per-video data is still null in Metricool, so YT conclusions rest on one Studio read (#1).
-- ✅ Absurd "what's for dinner?" crayon story (#1 dino, 230 million years) holds longest: 7 s on TikTok; on YouTube those who got past 2 s watched 19 s of 23 s. → Story/pacing is fine; only the first 1–2 s lose people.
-- ✅ A crayon character/object with a face (#5 Fridge interview) got the most likes (12 on 268 ≈ 4.5 %).
-- ✅ "be honest… how many times a day…" caption question (Group chat 5pm) is the only TikTok pushed past the ~280 test pool (838 views), despite weak retention. → Use this question style in captions.
-- ❌ App UI as the opening (App #1, App #2, Group chat) holds only 1–2 s. → Open on a crayon story/character; the app comes later.
-- ❌ Food-waste/tomato opening held 4 s of 27 s; #6 5:47 PM empty fridge held 4 s of 23 s. Neither beat dino.
-- ❓ Comments are still 0 on every platform. A question in the caption alone doesn't get comments → try the question big on screen.
-- 🧪 Running now: #7 Onions (TikTok 10-19) uses the "be honest… how many times…" caption again → read on 10-20/21 whether it passes ~280 views. If it does, the caption style is confirmed (2 of 2); if not, Group chat's 838 was luck. Next video should still pair it with a crayon-character hook in frame 0 + the question big on screen at the end.
+Based on 8 TikToks with data (5 crayon, 3 app), 6 FB Reels, 8 YT Shorts (2026-10-11 → 10-20). Small numbers, treat as best guesses. YT per-video data is still null in Metricool (channel views only: ~3,800 on 10-13→10-17), so YT conclusions rest on one Studio read (#1).
+- ✅ Absurd "what's for dinner?" crayon story (#1 dino, 230 million years) still holds longest: 7 s / 23 s on TikTok, 6 s on FB; on YouTube those past 2 s watched 19 s of 23 s. → Story/pacing is fine; only the first 1–2 s lose people.
+- ✅ A crayon character/object with a face (#5 Fridge interview) got the most likes (12 on 268 ≈ 4.5 %) and the best FB reel (240 views, 3 s).
+- ❌ App UI as the opening now fails 4 of 4 (App #1, App #2, Group chat, App #3 Onions): all hold 1–2 s. → Always open on a crayon story/character; the app only at the end.
+- ❓ "be honest… how many times…" caption: 1 of 2. Group chat got 838 views, App #3 Onions stopped at 281 with the same style → not confirmed; may have been the topic or luck. Keep using it (no downside), but don't count on it.
+- ❌ Food-waste/tomato opening (4 s / 27 s) and #6 5:47 PM empty fridge (4 s / 23 s) didn't beat dino. 7 of 8 TikToks capped at the ~280 test pool.
+- ❓ Comments are still 0 on every platform after 8 videos. A question in the caption alone doesn't get comments → put the question big on screen.
+- ⚠️ Metricool "account limit": App #3 YT Short (10-20) failed; App #3 FB Reel was marked ERROR but still got 197 views. Check post status after scheduling.
+- 🧪 Next test: a crayon character (with a face, like Fridge) talking to camera in frame 0 + a "be honest… how many times…" question shown BIG on screen at the end (and in the caption). Success = avg watch > 7 s or > 280 views on TikTok, or ≥ 1 comment.
 
 ## Learnings
 - 2026-10-13: #1 TikTok got 270 views (98% For You) but average watch was 7 s of 23 s, almost nobody watched to the end → hook too slow. New hook rule added to AUTOMATION.md.
@@ -24,9 +25,18 @@ Based on 7 TikToks with data (+ #7 Onions posted 10-19, no data yet), 5 FB Reels
 
 - 2026-10-19: #7 Onions Facebook Reel failed to publish ("Metricool account limit") → FB Reels may keep failing until the Metricool plan/limit is fixed; video runs should check post status after scheduling.
 
+- 2026-10-20: App #3 Onions (TikTok) stopped at 281 views (100 % For You), 1 like, avg 1 s → the "be honest… how many times" caption did NOT repeat Group chat's 838 (1 of 2), and app-UI openings are now 4/4 at 1–2 s.
+
 ## Daily numbers
 | date | video | platform | views | likes | comments | shares | avg watch |
 |---|---|---|---|---|---|---|---|
+| 2026-10-20 | App #3 Onions (be honest… walk back for onions) | TikTok | 281 (100 % For You) | 1 | 0 | 0 | 1 s |
+| 2026-10-20 | App #3 Onions | Facebook Reel | 197 (marked ERROR in Metricool but live) | 1 | 0 | – | 1 s |
+| 2026-10-20 | App #3 Onions | YouTube Short | NOT PUBLISHED – "Metricool account limit" | – | – | – | – |
+| 2026-10-20 | #6 Dinner at 5:47 PM | TikTok / FB Reel | 280 / 1 (unchanged) | 3 / 0 | 0 | 0 | 4 s / 23 s |
+| 2026-10-20 | Group chat, #5, #2, #1, App #2 | TikTok | 838, 268, 275, 270, 282 (all unchanged) | 0, 12, 1, 8, 1 | 0 | 0 | as 10-18 |
+| 2026-10-20 | All YT Shorts | YouTube Short | – (per-video null; channel views 10-18→20 not reported) | – | – | – | – |
+| 2026-10-20 | Followers | TikTok / FB / YT | 4 (0) / 0 / 1 (0) | – | – | – | – |
 | 2026-10-19 | #7 Onions (be honest… walk back for onions) | TikTok | – (posted today 14:00, not in Metricool yet) | – | – | – | – |
 | 2026-10-19 | #7 Onions | Facebook Reel | NOT PUBLISHED – "You have reached your Metricool account limit" | – | – | – | – |
 | 2026-10-19 | #6 Dinner at 5:47 PM | TikTok | 280 (unchanged, 100 % For You) | 3 | 0 | 0 | 4 s / 23 s |
