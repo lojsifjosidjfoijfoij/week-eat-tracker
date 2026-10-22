@@ -10,9 +10,9 @@ Louis can reorder, add or delete lines at any time. If the queue is empty, inven
 - [x] #4 "Two Shoppers, One Supermarket" (family sketch, split screen, realtime list) — 2026-10-13
 - [x] #5 "The Fridge Interview" (fridge interviewed like a tired employee, counter 38→99+, app: week → day list → shopping list) — 2026-10-14
 - [x] #6 "Dinner at 5:47 PM" (fridge emptier at every check until only the light + a tumbleweed, clock 5:47→6:30; app: Wed tacos → shopping list) — 2026-10-17
+- [x] #7 "The Group Chat" (phone character with a face melts under "what's for dinner?" texts, counter x47→x99+; app: week → Wed tacos → shopping list; end: "Be honest... how many times today?") — 2026-10-22
 
 ## Queue
-- [ ] "The Group Chat" — the family group chat scrolls down the screen ("what's for dinner?", "idk", "pizza?", "AGAIN??", 30 emojis), a bonk per message, the phone starts smoking. Resolution: everyone sees the week live in the app, the chat goes quiet. End line: "Mute the dinner chat."
 - [ ] "The Last Tomato" (Save the Tomato 2) — Tom the tomato returns to rescue a forgotten cucumber at the back of the fridge, racing through a jungle of leftovers. The cucumber is added to Thursday's salad in the app. End line: "No veggie left behind."
 - [ ] "Same Dinner, 7 Days" — Monday to Sunday, pasta, pasta, pasta; the family slowly turns grey, on Sunday the dog too. The week gets planned with 7 different dishes, colour returns. End line: "Break the pasta loop."
 - [ ] "Dinner Decision Speedrun" — "What's for dinner?", a stopwatch starts: 47 minutes of suggestions, vetoes and tears. With the app: 0.3 seconds, the answer is already there. End line: "New record: 0 seconds."
