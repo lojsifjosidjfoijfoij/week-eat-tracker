@@ -3,16 +3,16 @@
 Written by the daily 21:45 report run. One line per video per day + short learnings. The video runs read this before writing scenes.
 
 ## What works so far (rewritten by every stats run; video runs MUST follow this)
-Based on 8 TikToks with data (5 crayon, 3 app), 6 FB Reels, 8 YT Shorts (2026-10-11 → 10-21). Small numbers, treat as best guesses. YT per-video data is still null in Metricool (channel views only), so YT conclusions rest on one Studio read (#1). No new video since 10-20 → nothing below changed status today.
-- ✅ Absurd "what's for dinner?" crayon story (#1 dino, 230 million years) still holds longest: 7 s / 23 s on TikTok, 6 s on FB; on YouTube those past 2 s watched 19 s of 23 s. → Story/pacing is fine; only the first 1–2 s lose people.
+Based on 9 TikToks with data (6 crayon, 3 app), 6 FB Reels, 8 YT Shorts (2026-10-11 → 10-22). Small numbers, treat as best guesses. YT per-video data is still null in Metricool (channel views only), so YT conclusions rest on one Studio read (#1). #7 Group Chat (the 🧪 test) went out 10-22 14:00 and only has ~8 h of data (21 views) → no verdict yet; nothing below changed status today.
+- ✅ Absurd "what's for dinner?" crayon story (#1 dino, 230 million years) still holds longest: 6 s / 23 s on TikTok, 6 s on FB; on YouTube those past 2 s watched 19 s of 23 s. → Story/pacing is fine; only the first 1–2 s lose people.
 - ✅ A crayon character/object with a face (#5 Fridge interview) got the most likes (12 on 268 ≈ 4.5 %) and the best FB reel (240 views, 3 s).
-- ❌ App UI as the opening fails 4 of 4 (App #1, App #2, Group chat, App #3 Onions): all hold 1–2 s on TikTok and FB. → Always open on a crayon story/character; the app only at the end.
-- ❓ "be honest… how many times…" caption: 1 of 2 (Group chat 838 views, Onions 281). Not confirmed; keep using it (no downside), don't count on it.
-- ❌ Food-waste/tomato opening (4 s / 27 s) and #6 5:47 PM empty fridge (4 s / 23 s) didn't beat dino. 7 of 8 TikToks capped at the ~280 test pool.
-- ❓ YouTube channel views fell from 544–1,377/day (10-13→10-16, crayon Shorts) to 24 and 6 (10-17, 10-18, after the app-demo and Two shoppers Shorts). Can't tell per video why (channel totals only); watch whether the next crayon Short brings it back.
-- ❓ Comments: still 0 on TikTok/YT after 8 videos; FB comment counts aren't reported. A question in the caption alone doesn't get comments → put the question big on screen.
-- ⚠️ Metricool "account limit": since 10-19 posts fail (Onions FB marked ERROR but live, Onions YT not published) and nothing has been scheduled for 10-21/10-22. Fix the plan/limit before the next video run.
-- 🧪 Next test: a crayon character (with a face, like Fridge) talking to camera in frame 0 + a "be honest… how many times…" question shown BIG on screen at the end (and in the caption). Success = avg watch > 7 s or > 280 views on TikTok, or ≥ 1 comment.
+- ❌ App UI as the opening fails 4 of 4 (App #1, App #2, Group chat 5pm, App #3 Onions): all hold 1–2 s on TikTok and FB. → Always open on a crayon story/character; the app only at the end.
+- ❓ "be honest… how many times…" caption: 1 of 2 so far (Group chat 5pm 838 views, Onions 281); #7 is the 3rd try. Keep using it (no downside), don't count on it.
+- ❌ Food-waste/tomato opening (4 s / 27 s) and #6 5:47 PM empty fridge (4 s / 23 s) didn't beat dino. 7 of 8 settled TikToks capped at the ~280 test pool.
+- ❓ YouTube channel views: 544–1,377/day (10-13→10-16, crayon Shorts) then 24, 6, 2 (10-17→10-19). No per-video data, so the cause is unknown; #7 is the first crayon Short since then and will show if crayon brings it back.
+- ❓ Comments: still 0 on TikTok/YT after 9 videos; FB comment counts aren't reported. A question in the caption alone doesn't get comments → put the question big on screen (#7 does this).
+- ⚠️ Metricool "account limit": since 10-19 every post is marked ERROR. Onions FB and #7 TikTok went live anyway; Onions YT never appeared; #7 FB/YT unknown. Nothing is scheduled for 10-23. Fix the plan/limit before the next video run and check each post's real status.
+- 🧪 Next test (running: #7 The Group Chat, 10-22): a crayon character with a face (overheating phone) in frame 0 + a big on-screen "Be honest… how many times today?" end card + "be honest" caption. Judge on 10-23/24: success = TikTok avg watch > 6 s or > 280 views, or ≥ 1 comment. If it fails, keep the face-character and test a 1-second hook (character speaks the first line in frame 0, no setup).
 
 ## Learnings
 - 2026-10-13: #1 TikTok got 270 views (98% For You) but average watch was 7 s of 23 s, almost nobody watched to the end → hook too slow. New hook rule added to AUTOMATION.md.
@@ -33,6 +33,13 @@ Based on 8 TikToks with data (5 crayon, 3 app), 6 FB Reels, 8 YT Shorts (2026-10
 ## Daily numbers
 | date | video | platform | views | likes | comments | shares | avg watch |
 |---|---|---|---|---|---|---|---|
+| 2026-10-22 | #7 The Group Chat (crayon, phone with a face, be honest… caption) | TikTok | 21 (100 % For You, posted 14:00 → early; marked ERROR "account limit" but live) | 1 | 0 | 0 | 0 s / 23.6 s (too early) |
+| 2026-10-22 | #7 The Group Chat | FB Reel / YouTube Short | marked ERROR "account limit"; FB not in data yet, YT per-video null → unknown if live | – | – | – | – |
+| 2026-10-22 | App #3 Onions | TikTok / FB Reel | 281 / 198 (unchanged) | 1 / 1 | 0 / – | 0 | 1 s / 1 s |
+| 2026-10-22 | #6, Group chat 5pm, #5, #2, #1, App #2 | TikTok | 280, 838, 268, 275, 270, 282 (all unchanged) | 3, 0, 12, 1, 8, 1 | 0 | 0 | 4, 2, 5, 4, 6, 1 s |
+| 2026-10-22 | #6, Group chat 5pm, #5, #1 | FB Reel | 1, 135, 240, 234 (unchanged) | 0, 1, 0, 0 | – | – | 0, 1, 3, 6 s |
+| 2026-10-22 | All YT Shorts | YouTube Short | per-video null; channel views 10-19: 2 (10-20→22 not reported) | – | – | – | – |
+| 2026-10-22 | Followers | TikTok / FB / YT | 4 (0) / 0 / 1 (0) | – | – | – | – |
 | 2026-10-21 | No new video (none scheduled 10-21) | – | – | – | – | – | – |
 | 2026-10-21 | App #3 Onions | TikTok / FB Reel | 281 / 198 | 1 / 1 | 0 / – | 0 | 1 s / 1 s |
 | 2026-10-21 | #6 5:47 PM, Group chat, #5, #2, #1, App #2 | TikTok | 280, 838, 268, 275, 270, 282 (all unchanged) | 3, 0, 12, 1, 8, 1 | 0 | 0 | as 10-18 |
