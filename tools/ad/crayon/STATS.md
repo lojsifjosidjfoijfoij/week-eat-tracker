@@ -3,16 +3,16 @@
 Written by the daily 21:45 report run. One line per video per day + short learnings. The video runs read this before writing scenes.
 
 ## What works so far (rewritten by every stats run; video runs MUST follow this)
-Based on 9 TikToks with data (6 crayon, 3 app), 6 FB Reels, 8 YT Shorts (2026-10-11 → 10-22). Small numbers, treat as best guesses. YT per-video data is still null in Metricool (channel views only), so YT conclusions rest on one Studio read (#1). #7 Group Chat (the 🧪 test) went out 10-22 14:00 and only has ~8 h of data (21 views) → no verdict yet; nothing below changed status today.
-- ✅ Absurd "what's for dinner?" crayon story (#1 dino, 230 million years) still holds longest: 6 s / 23 s on TikTok, 6 s on FB; on YouTube those past 2 s watched 19 s of 23 s. → Story/pacing is fine; only the first 1–2 s lose people.
-- ✅ A crayon character/object with a face (#5 Fridge interview) got the most likes (12 on 268 ≈ 4.5 %) and the best FB reel (240 views, 3 s).
-- ❌ App UI as the opening fails 4 of 4 (App #1, App #2, Group chat 5pm, App #3 Onions): all hold 1–2 s on TikTok and FB. → Always open on a crayon story/character; the app only at the end.
-- ❓ "be honest… how many times…" caption: 1 of 2 so far (Group chat 5pm 838 views, Onions 281); #7 is the 3rd try. Keep using it (no downside), don't count on it.
-- ❌ Food-waste/tomato opening (4 s / 27 s) and #6 5:47 PM empty fridge (4 s / 23 s) didn't beat dino. 7 of 8 settled TikToks capped at the ~280 test pool.
-- ❓ YouTube channel views: 544–1,377/day (10-13→10-16, crayon Shorts) then 24, 6, 2 (10-17→10-19). No per-video data, so the cause is unknown; #7 is the first crayon Short since then and will show if crayon brings it back.
-- ❓ Comments: still 0 on TikTok/YT after 9 videos; FB comment counts aren't reported. A question in the caption alone doesn't get comments → put the question big on screen (#7 does this).
-- ⚠️ Metricool "account limit": since 10-19 every post is marked ERROR. Onions FB and #7 TikTok went live anyway; Onions YT never appeared; #7 FB/YT unknown. Nothing is scheduled for 10-23. Fix the plan/limit before the next video run and check each post's real status.
-- 🧪 Next test (running: #7 The Group Chat, 10-22): a crayon character with a face (overheating phone) in frame 0 + a big on-screen "Be honest… how many times today?" end card + "be honest" caption. Judge on 10-23/24: success = TikTok avg watch > 6 s or > 280 views, or ≥ 1 comment. If it fails, keep the face-character and test a 1-second hook (character speaks the first line in frame 0, no setup).
+Based on 10 TikToks (7 crayon, 3 app), 7 FB Reels, 8 YT Shorts (2026-10-11 → 10-23). Small numbers, treat as best guesses. YT per-video data is still null in Metricool, so YT conclusions rest on one Studio read (#1). Updated 10-23 with the first full day of #7 The Group Chat (the 🧪 test).
+- ✅ Topic "how many times does your family ask *what's for dinner?*" + caption opening "Be honest… how many…" is the only thing that has broken TikTok's ~280 test pool: 2 of 2 (Group chat 5pm app 838, #7 Group Chat crayon 816). The same caption on another topic (Onions) stayed at 281 → it's the topic + question together, not the words "be honest". Keep this topic family; vary the setting.
+- ✅ A crayon character/object with a face in frame 0 wins likes: #7 phone-with-face 17 likes (2.1 %, best ever), #5 Fridge 12 (4.5 %). Same topic as an app video (Group chat 5pm) got 0 likes → crayon beats app on likes and holds 2× longer (4 s vs 2 s).
+- ❌ App UI as the opening fails 4 of 4 (1–2 s on TikTok and FB). App only at the end.
+- ❌ Retention is still the weak spot: every crayon hook holds 4–6 s on TikTok (#7: 4 s / 23.6 s); #1 dino (6 s) is still the best. Food-waste/tomato and empty-fridge openings didn't beat dino.
+- ❓ Facebook: Reels get 135–243 views with 0–3 s average no matter what; #7 got 200 views but 1 s. FB is not telling us anything yet.
+- ❓ YouTube: channel views 544–1,377/day (10-13→10-16), then 24, 6, 2, 15 (10-17→10-20). Per-video data null; can't tell why.
+- ❌ Comments: still 0 on TikTok/YT after 10 videos, even with the big on-screen "Be honest…" end card on #7. Neither caption nor on-screen question gets comments → next try a pinned first comment / reply prompt, not more on-screen text.
+- ⚠️ Metricool "account limit": every post since 10-19 is marked ERROR, yet #7 went live on TikTok and FB. YT for Onions and #7 not confirmed. Nothing is scheduled for 10-23 or 10-24. Fix the plan/limit before the next video run and check each post's real status.
+- 🧪 Next test: keep the winning combo (family "what's for dinner?" count topic + face character in frame 0 + "Be honest… how many…" caption) and change ONE thing: the character speaks/shouts the first line in frame 0 with zero setup (e.g. "47 times. FORTY-SEVEN." on screen in second 0). Success = TikTok avg watch ≥ 6 s (beats dino) while still passing 280 views.
 
 ## Learnings
 - 2026-10-13: #1 TikTok got 270 views (98% For You) but average watch was 7 s of 23 s, almost nobody watched to the end → hook too slow. New hook rule added to AUTOMATION.md.
@@ -30,9 +30,18 @@ Based on 9 TikToks with data (6 crayon, 3 app), 6 FB Reels, 8 YT Shorts (2026-10
 
 - 2026-10-21: Metricool now reports YT channel views for 10-17 and 10-18: just 24 and 6 (vs 544–1,377/day on 10-13→10-16). YouTube stopped pushing the channel right when the app-demo/Two shoppers Shorts went out; cause unclear (no per-video YT data). No video posted 10-21, none scheduled 10-22.
 
+- 2026-10-23: 🧪 test #7 The Group Chat result: PASSED on reach/likes, FAILED on retention. TikTok 816 views (99.9 % For You, 2nd video ever past the ~280 pool), 17 likes (best ever), 0 comments, avg 4 s / 23.6 s. Both pool-breakers are the "how many times does your family ask what's for dinner" topic with a "be honest… how many" caption. Face-character beat the app version on likes (17 vs 0) and watch (4 s vs 2 s). On-screen question end card still got 0 comments.
+
 ## Daily numbers
 | date | video | platform | views | likes | comments | shares | avg watch |
 |---|---|---|---|---|---|---|---|
+| 2026-10-23 | #7 The Group Chat (crayon, phone with a face, be honest… caption) | TikTok | 816 (99.9 % For You, past the ~280 pool) | 17 | 0 | 0 | 4 s / 23.6 s |
+| 2026-10-23 | #7 The Group Chat | FB Reel | 200 (marked ERROR but live) | 1 | – | – | 1 s |
+| 2026-10-23 | #7 The Group Chat | YouTube Short | marked ERROR; per-video null → unknown if live | – | – | – | – |
+| 2026-10-23 | Onions, #6, Group chat 5pm, #5, #2, #1, App #2 | TikTok | 281, 280, 838, 268, 275, 270, 282 (all unchanged) | 1, 3, 0, 12, 1, 8, 1 | 0 | 0 | 1, 4, 2, 5, 4, 6, 1 s |
+| 2026-10-23 | Onions, #6, Group chat 5pm, #5, #1 | FB Reel | 198, 1, 135, 243, 234 | 1, 0, 1, 0, 0 | – | – | 1, 0, 1, 3, 6 s |
+| 2026-10-23 | All YT Shorts | YouTube Short | per-video null; channel views 10-20: 15 (10-21→23 not reported) | – | – | – | – |
+| 2026-10-23 | Followers | TikTok / FB / YT | 4 (10-23 not reported) / 0 / 4 (+3, per Metricool 10-23) | – | – | – | – |
 | 2026-10-22 | #7 The Group Chat (crayon, phone with a face, be honest… caption) | TikTok | 21 (100 % For You, posted 14:00 → early; marked ERROR "account limit" but live) | 1 | 0 | 0 | 0 s / 23.6 s (too early) |
 | 2026-10-22 | #7 The Group Chat | FB Reel / YouTube Short | marked ERROR "account limit"; FB not in data yet, YT per-video null → unknown if live | – | – | – | – |
 | 2026-10-22 | App #3 Onions | TikTok / FB Reel | 281 / 198 (unchanged) | 1 / 1 | 0 / – | 0 | 1 s / 1 s |
