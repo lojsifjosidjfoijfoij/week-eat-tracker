@@ -3,8 +3,8 @@
 Written by the daily 21:45 report run. One line per video per day + short learnings. The video runs read this before writing scenes.
 
 ## What works so far (rewritten by every stats run; video runs MUST follow this)
-Based on 10 TikToks with data (7 crayon, 3 app), 8 FB Reels, 8 YT Shorts (2026-10-11 → 10-24). Small numbers, treat as best guesses. YT per-video data is still null in Metricool, so YT conclusions rest on channel totals + one Studio read (#1). Updated 10-26: The Last Tomato (10-26) failed on ALL three platforms → no new performance data since 10-24.
-- ⚠️ BLOCKER: Metricool "account limit" now blocks EVERY network, Facebook too (10-26 Last Tomato: TikTok, FB and YT all ERROR, nothing live). TikTok has received nothing since 10-22. Do NOT make or schedule more videos until Louis fixes the Metricool plan (or posts manually) – every video made now gets 0 views.
+Based on 10 TikToks with data (7 crayon, 3 app), 8 FB Reels, 8 YT Shorts (2026-10-11 → 10-24). Small numbers, treat as best guesses. YT per-video data is still null in Metricool, so YT conclusions rest on channel totals + one Studio read (#1). Updated 10-27: The Last Tomato (10-26) failed on ALL three platforms, nothing posted 10-27 and nothing scheduled 10-28 → no new performance data since 10-24; all numbers flat.
+- ⚠️ BLOCKER: Metricool "account limit" now blocks EVERY network, Facebook too (10-26 Last Tomato: TikTok, FB and YT all ERROR, nothing live). TikTok has received nothing since 10-22 (5 days). Still unresolved 10-27. Do NOT make or schedule more videos until Louis fixes the Metricool plan (or posts manually) – every video made now gets 0 views.
 - ✅ Topic "how many times does your family ask *what's for dinner?*" + caption opening "Be honest… how many…" is the only thing that has broken TikTok's ~280 test pool: 2 of 2 (Group chat 5pm app 838, #7 Group Chat crayon 818). Same caption on other topics (Onions 281) stayed in the pool → it's the topic + question together. Keep this topic family; vary the setting. (Food-waste/tomato topic: 275 on TikTok, 1 like – weak.)
 - ✅ A crayon character/object with a face in frame 0 wins likes: #7 phone-with-face 17 likes (2.1 %, best ever), #5 Fridge 12 (4.5 %). Same topic as an app video (Group chat 5pm) got 0 likes → crayon beats app on likes and holds 2× longer (4 s vs 2 s).
 - ❌ App UI as the opening fails 5 of 5 (1–2 s on TikTok and FB). App only at the end.
@@ -38,6 +38,12 @@ Based on 10 TikToks with data (7 crayon, 3 app), 8 FB Reels, 8 YT Shorts (2026-1
 ## Daily numbers
 | date | video | platform | views | likes | comments | shares | avg watch |
 |---|---|---|---|---|---|---|---|
+| 2026-10-27 | No new video (none posted 10-27, none scheduled 10-28; Metricool limit still blocks) | – | – | – | – | – | – |
+| 2026-10-27 | #7 The Group Chat | TikTok / FB Reel | 818 / 203 (both unchanged) | 17 / 1 | 0 | 0 | 4 s / 1 s of 23.6 s |
+| 2026-10-27 | APP #4, Onions, Group chat 5pm, #5, #1 | FB Reel | 202, 198, 135, 243, 234 (unchanged) | 0, 1, 1, 0, 0 | – | – | 1, 1, 1, 3, 6 s |
+| 2026-10-27 | Onions, #6, Group chat 5pm, #5, #2, #1, App #2 | TikTok | 281, 280, 838, 268, 275, 270, 282 (all unchanged) | 1, 3, 0, 12, 1, 8, 1 | 0 | 0 | 1, 4, 2, 5, 4, 6, 1 s |
+| 2026-10-27 | All YT Shorts | YouTube Short | per-video null; channel views 10-23: 239, 10-24: 54 (10-25→27 not reported) | – | – | – | – |
+| 2026-10-27 | Followers | TikTok / FB / YT | 4 (0) / 0 / 4 (0) | – | – | – | – |
 | 2026-10-26 | The Last Tomato (crayon, tomato + forgotten cucumber, be honest… fridge caption) | TikTok / FB Reel / YT Short | NOT LIVE – all 3 marked ERROR "account limit" | – | – | – | – |
 | 2026-10-26 | APP #4 Mom planned Thursday | FB Reel | 202 (+4) | 0 | – | – | 1 s |
 | 2026-10-26 | #7 The Group Chat | TikTok / FB Reel | 818 (unchanged, 99.8 % For You) / 203 (+1) | 17 / 1 | 0 | 0 | 4 s / 1 s of 23.6 s |
