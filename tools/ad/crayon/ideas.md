@@ -12,9 +12,9 @@ Louis can reorder, add or delete lines at any time. If the queue is empty, inven
 - [x] #6 "Dinner at 5:47 PM" (fridge emptier at every check until only the light + a tumbleweed, clock 5:47→6:30; app: Wed tacos → shopping list) — 2026-10-17
 - [x] #7 "The Group Chat" (phone character with a face melts under "what's for dinner?" texts, counter x47→x99+; app: week → Wed tacos → shopping list; end: "Be honest... how many times today?") — 2026-10-22
 - [x] #8 "The Last Tomato" (Tom rescues Cuke the forgotten cucumber, DAYS FORGOTTEN 12→15, cuke shouts in frame 0; app: Thu Greek salad → shopping list ticks Cucumber/Feta/Olives; end: "Be honest... what's hiding in YOUR fridge?") — 2026-10-26
+- [x] #9 "Same Dinner, 7 Days" (pasta Mon→Sun, family turns grey, on Sunday the dog too; frame 0: grey kid shouts "SEVEN DAYS. OF PASTA!!", PASTA IN A ROW: 7; app: week with 7 different dinners → Monday Tacos → shopping list ticks; end: "Break the pasta loop." + "Be honest... how many pasta nights in a row?") — 2026-10-29
 
 ## Queue
-- [ ] "Same Dinner, 7 Days" — Monday to Sunday, pasta, pasta, pasta; the family slowly turns grey, on Sunday the dog too. The week gets planned with 7 different dishes, colour returns. End line: "Break the pasta loop."
 - [ ] "Dinner Decision Speedrun" — "What's for dinner?", a stopwatch starts: 47 minutes of suggestions, vetoes and tears. With the app: 0.3 seconds, the answer is already there. End line: "New record: 0 seconds."
 - [ ] "The Receipt" — Dad comes home with a receipt that keeps rolling out the door, down the stairs, onto the road: chips, three kinds of cheese, no dinner. With the list: short receipt, everything ticked, dinner. End line: "Shop the list. Not the snacks."
 - [ ] "Who Ate the Ingredients?" — Tuesday's taco ingredients vanish one by one; a detective questions the teenager, the dog and Dad. It was Dad (the cheese). The app list updates live, cheese gets added. End line: "Missing cheese? It's on the list."
