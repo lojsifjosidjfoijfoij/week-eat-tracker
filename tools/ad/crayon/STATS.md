@@ -3,15 +3,15 @@
 Written by the daily 21:45 report run. One line per video per day + short learnings. The video runs read this before writing scenes.
 
 ## What works so far (rewritten by every stats run; video runs MUST follow this)
-Based on 10 TikToks with data (7 crayon, 3 app), 8 FB Reels, 8 YT Shorts (2026-10-11 → 10-24). Small numbers, treat as best guesses. YT per-video data is still null in Metricool, so YT conclusions rest on channel totals + one Studio read (#1). Updated 10-28: no new live video since 10-24. The Last Tomato (10-26) AND APP #5 Swap the day (10-28) both failed on all three platforms ("account limit"); all numbers flat.
-- ⚠️ BLOCKER: Metricool "account limit" blocks EVERY network (TikTok, FB, YT). 2 videos in a row now wasted (10-26 Last Tomato, 10-28 Swap the day: all ERROR, 0 views). TikTok has received nothing since 10-22 (6 days). Video runs: do NOT make or schedule another video until a test post shows status PUBLISHED – check getScheduledPosts for ERROR before producing anything. Louis must fix the Metricool plan or post manually.
+Based on 10 TikToks with data (7 crayon, 3 app), 8 FB Reels, 8 YT Shorts (2026-10-11 → 10-24). Small numbers, treat as best guesses. YT per-video data is still null in Metricool, so YT conclusions rest on channel totals + one Studio read (#1). Updated 10-29: still no new live video since 10-24 (5 days). CRAYON #9 Same Dinner, 7 Days was made 10-29 but saved as DRAFTS (TikTok/FB/YT, not published) because of the account-limit blocker; all other numbers flat.
+- ⚠️ BLOCKER: Metricool "account limit" blocks EVERY network (TikTok, FB, YT). 10-26 and 10-28 failed (ERROR, 0 views); TikTok has received nothing since 10-22 (7 days). #9 (10-29) sits as unpublished drafts. Video runs: do NOT make another video while #9 is still an unpublished draft – there is already one finished video waiting. Louis must fix the Metricool plan or post #9 manually.
 - ✅ Topic "how many times does your family ask *what's for dinner?*" + caption opening "Be honest… how many…" is the only thing that has broken TikTok's ~280 test pool: 2 of 2 (Group chat 5pm app 838, #7 Group Chat crayon 818). Same caption on other topics (Onions 281) stayed in the pool → it's the topic + question together. Keep this topic family; vary the setting. (Food-waste/tomato topic: 275 on TikTok, 1 like – weak.)
 - ✅ A crayon character/object with a face in frame 0 wins likes: #7 phone-with-face 17 likes (2.1 %, best ever), #5 Fridge 12 (4.5 %). Same topic as an app video (Group chat 5pm) got 0 likes → crayon beats app on likes and holds 2× longer (4 s vs 2 s).
 - ❌ App UI as the opening fails 5 of 5 (1–2 s on TikTok and FB). App only at the end.
 - ❌ Retention is still the weak spot: every crayon hook holds 4–6 s on TikTok (#7: 4 s / 23.6 s); #1 dino (6 s) is still the best.
 - ❓ Facebook: Reels get ~200 views with 0–3 s average no matter what (APP #4 202 / 1 s, #7 203 / 1 s). FB is not telling us anything yet.
 - ❓ YouTube: channel views 544–1,377/day (10-13→16), 2–24/day (10-17→21), then 654 on 10-22 and 239 on 10-23 = right after #7 crayon Group Chat (marked ERROR, but the spike says it went live). Per-video null. ❌ Comments still 0 everywhere after 10 videos, even with on-screen questions and first-comment prompts.
-- 🧪 Next test (still open, NOT yet run – 10-26 video was a tomato/food-waste topic instead and never went live): keep the winning combo (family "what's for dinner?" count topic + crayon face character in frame 0 + "Be honest… how many…" caption) and change ONE thing: the character speaks/shouts the first line in frame 0 with zero setup (e.g. "47 times. FORTY-SEVEN." on screen in second 0). Success = TikTok avg watch ≥ 6 s (beats dino) while still passing 280 views. Only post once Metricool publishing works again.
+- 🧪 Next test: #9 Same Dinner, 7 Days (drafted 10-29, NOT live yet) already has the frame-0 shout ("SEVEN DAYS. OF PASTA!!") + crayon faces + "Be honest… how many…" caption, but on a pasta topic, not the "what's for dinner?" count topic → it changes 2 things at once, so read it as: shout hook works if TikTok avg watch ≥ 6 s; if it also stays at ~280 views, topic is the likely reason. The next NEW video after #9 should put the frame-0 shout on the "what's for dinner?" count topic (e.g. "47 times. FORTY-SEVEN." in second 0). Only post once Metricool publishing works again.
 
 ## Learnings
 - 2026-10-13: #1 TikTok got 270 views (98% For You) but average watch was 7 s of 23 s, almost nobody watched to the end → hook too slow. New hook rule added to AUTOMATION.md.
@@ -40,6 +40,12 @@ Based on 10 TikToks with data (7 crayon, 3 app), 8 FB Reels, 8 YT Shorts (2026-1
 ## Daily numbers
 | date | video | platform | views | likes | comments | shares | avg watch |
 |---|---|---|---|---|---|---|---|
+| 2026-10-29 | CRAYON #9 Same Dinner, 7 Days (crayon, frame-0 shout "SEVEN DAYS. OF PASTA!!", be honest… pasta nights caption) | TikTok / FB Reel / YT Short | NOT LIVE – saved as DRAFTS (status PENDING), waiting for Louis | – | – | – | – |
+| 2026-10-29 | #7 The Group Chat | TikTok / FB Reel | 818 / 203 (both unchanged) | 17 / 1 | 0 | 0 | 4 s / 1 s of 23.6 s |
+| 2026-10-29 | APP #4, Onions, Group chat 5pm, #6 | FB Reel | 202, 199, 135, 1 (unchanged; #5/#1 now outside 14-day window) | 0, 1, 1, 0 | – | – | 1, 1, 1, 0 s |
+| 2026-10-29 | Onions, #6, Group chat 5pm, App #2 | TikTok | 281, 280, 838, 282 (all unchanged) | 1, 3, 0, 1 | 0 | 0 | 1, 4, 2, 1 s |
+| 2026-10-29 | All YT Shorts | YouTube Short | per-video null; channel views 10-25: 13, 10-26: 2 (10-27→29 not reported) | – | – | – | – |
+| 2026-10-29 | Followers | TikTok / FB / YT | 4 (0) / 0 / 4 (0) | – | – | – | – |
 | 2026-10-28 | APP #5 Swap the day (app, "Tuesday got busy? Swap the day", be honest… plan changed caption) | TikTok / FB Reel / YT Short | NOT LIVE – all 3 marked ERROR "account limit" | – | – | – | – |
 | 2026-10-28 | #7 The Group Chat | TikTok / FB Reel | 818 / 203 (both unchanged) | 17 / 1 | 0 | 0 | 4 s / 1 s of 23.6 s |
 | 2026-10-28 | APP #4, Onions, Group chat 5pm, #5, #1 | FB Reel | 202, 199 (+1), 135, 243, 234 | 0, 1, 1, 0, 0 | – | – | 1, 1, 1, 3, 6 s |
