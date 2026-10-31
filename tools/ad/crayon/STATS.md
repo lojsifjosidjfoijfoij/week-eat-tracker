@@ -37,6 +37,8 @@ Based on 10 TikToks with data (7 crayon, 3 app), 8 FB Reels, 8 YT Shorts (2026-1
 
 - 2026-10-23: 🧪 test #7 The Group Chat result: PASSED on reach/likes, FAILED on retention. TikTok 816 views (99.9 % For You, 2nd video ever past the ~280 pool), 17 likes (best ever), 0 comments, avg 4 s / 23.6 s. Both pool-breakers are the "how many times does your family ask what's for dinner" topic with a "be honest… how many" caption. Face-character beat the app version on likes (17 vs 0) and watch (4 s vs 2 s). On-screen question end card still got 0 comments.
 
+- 2026-10-31: Video run SKIPPED (no new video made, no Metricool posts created). Per the blocker rule: #9 Same Dinner, 7 Days is still 3 unpublished DRAFTS (PENDING) and every auto-publish post 10-22→10-28 shows ERROR "You have reached your Metricool account limit". Next run alternates to APP as normal (last LOG line is still CRAYON #9) once Louis has fixed the Metricool plan or posted #9.
+
 ## Daily numbers
 | date | video | platform | views | likes | comments | shares | avg watch |
 |---|---|---|---|---|---|---|---|
