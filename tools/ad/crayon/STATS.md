@@ -39,6 +39,8 @@ Based on 10 TikToks with data (7 crayon, 3 app), 8 FB Reels, 8 YT Shorts (2026-1
 
 - 2026-10-31: Video run SKIPPED (no new video made, no Metricool posts created). Per the blocker rule: #9 Same Dinner, 7 Days is still 3 unpublished DRAFTS (PENDING) and every auto-publish post 10-22→10-28 shows ERROR "You have reached your Metricool account limit". Next run alternates to APP as normal (last LOG line is still CRAYON #9) once Louis has fixed the Metricool plan or posted #9.
 
+- 2026-11-02: Video run SKIPPED again (no new video, no Metricool posts). #9 Same Dinner, 7 Days is still 3 DRAFTS (PENDING) on TikTok/FB/YT; posts 10-22→10-28 still ERROR "account limit". Next run still alternates to APP (last LOG line CRAYON #9) once Louis has fixed the Metricool plan or posted #9.
+
 ## Daily numbers
 | date | video | platform | views | likes | comments | shares | avg watch |
 |---|---|---|---|---|---|---|---|
