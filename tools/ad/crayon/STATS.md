@@ -3,8 +3,8 @@
 Written by the daily 21:45 report run. One line per video per day + short learnings. The video runs read this before writing scenes.
 
 ## What works so far (rewritten by every stats run; video runs MUST follow this)
-Based on 10 TikToks with data (7 crayon, 3 app), 8 FB Reels, 8 YT Shorts (2026-10-11 → 10-24). Small numbers, treat as best guesses. YT per-video data is still null in Metricool, so YT conclusions rest on channel totals + one Studio read (#1). Updated 11-04: still no new live video since 10-24 (11 days). CRAYON #9 Same Dinner, 7 Days (made 10-29) is still DRAFTS (status PENDING) on TikTok/FB/YT; nothing scheduled 11-05. All numbers flat (#7 TikTok 818, FB #7 204, APP #4 203; YT channel last reported 10-31: 1 view). The rules below are unchanged because there is no new data to test them.
-- ⚠️ BLOCKER: Metricool "account limit" blocks EVERY network (TikTok, FB, YT). 10-26 and 10-28 failed (ERROR, 0 views); TikTok has received nothing since 10-22 (13 days). #9 (10-29) still sits as unpublished drafts on 11-04. Video runs: do NOT make another video while #9 is still an unpublished draft – there is already one finished video waiting. Louis must fix the Metricool plan or post #9 manually.
+Based on 10 TikToks with data (7 crayon, 3 app), 8 FB Reels, 8 YT Shorts (2026-10-11 → 10-24). Small numbers, treat as best guesses. YT per-video data is still null in Metricool, so YT conclusions rest on channel totals + one Studio read (#1). Updated 11-05: still no new live video since 10-24 (12 days). CRAYON #9 Same Dinner, 7 Days (made 10-29) is still DRAFTS (status PENDING) on TikTok/FB/YT; nothing scheduled 11-06. All numbers flat (#7 TikTok 818, FB #7 204, APP #4 203; YT channel last reported 10-31: 1 view). The rules below are unchanged because there is no new data to test them.
+- ⚠️ BLOCKER: Metricool "account limit" blocks EVERY network (TikTok, FB, YT). 10-26 and 10-28 failed (ERROR, 0 views); TikTok has received nothing since 10-22 (13 days). #9 (10-29) still sits as unpublished drafts on 11-05. Video runs: do NOT make another video while #9 is still an unpublished draft – there is already one finished video waiting. Louis must fix the Metricool plan or post #9 manually.
 - ✅ Topic "how many times does your family ask *what's for dinner?*" + caption opening "Be honest… how many…" is the only thing that has broken TikTok's ~280 test pool: 2 of 2 (Group chat 5pm app 838, #7 Group Chat crayon 818). Same caption on other topics (Onions 281) stayed in the pool → it's the topic + question together. Keep this topic family; vary the setting. (Food-waste/tomato topic: 275 on TikTok, 1 like – weak.)
 - ✅ A crayon character/object with a face in frame 0 wins likes: #7 phone-with-face 17 likes (2.1 %, best ever), #5 Fridge 12 (4.5 %). Same topic as an app video (Group chat 5pm) got 0 likes → crayon beats app on likes and holds 2× longer (4 s vs 2 s).
 - ❌ App UI as the opening fails 5 of 5 (1–2 s on TikTok and FB). App only at the end.
@@ -48,6 +48,11 @@ Based on 10 TikToks with data (7 crayon, 3 app), 8 FB Reels, 8 YT Shorts (2026-1
 ## Daily numbers
 | date | video | platform | views | likes | comments | shares | avg watch |
 |---|---|---|---|---|---|---|---|
+| 2026-11-05 | No new video (#9 Same Dinner, 7 Days still DRAFT/PENDING on all 3; nothing scheduled 11-06) | – | – | – | – | – | – |
+| 2026-11-05 | #7 The Group Chat | TikTok / FB Reel | 818 / 204 (both unchanged) | 17 / 1 | 0 | 0 | 4 s / 1 s of 23.6 s |
+| 2026-11-05 | APP #4 | FB Reel | 203 (unchanged) | 0 | – | – | 1 s |
+| 2026-11-05 | All YT Shorts | YouTube Short | per-video null; channel views 10-31: 1 (11-01→05 not reported) | – | – | – | – |
+| 2026-11-05 | Followers | TikTok / FB / YT | 4 (0) / 0 / 4 (0) | – | – | – | – |
 | 2026-11-04 | No new video (#9 Same Dinner, 7 Days still DRAFT/PENDING on all 3; nothing scheduled 11-05) | – | – | – | – | – | – |
 | 2026-11-04 | #7 The Group Chat | TikTok / FB Reel | 818 / 204 (both unchanged) | 17 / 1 | 0 | 0 | 4 s / 1 s of 23.6 s |
 | 2026-11-04 | APP #4 | FB Reel | 203 (unchanged; Onions now outside 14-day window) | 0 | – | – | 1 s |
